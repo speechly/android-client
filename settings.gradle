@@ -1,0 +1,2 @@
+include ':client'
+rootProject.buildFileName = 'build.gradle'
