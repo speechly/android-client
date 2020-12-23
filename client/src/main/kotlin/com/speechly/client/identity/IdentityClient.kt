@@ -16,7 +16,7 @@ interface IdentityClient : Closeable {
     /**
      * Performs a login against the API using provided request.
      *
-     * @param request - the login request that is sent to the API.
+     * @param request the login request that is sent to the API.
      */
     suspend fun login(request: IdentityOuterClass.LoginRequest): IdentityOuterClass.LoginResponse
 }
@@ -35,8 +35,8 @@ class AuthenticationException(message: String): Exception(message)
 /**
  * A client for Speechly gRPC Identity API.
  *
- * @param channel - the gRPC channel to use for sending requests to the API
- * @param shutdownTimeout - the timeout for closing the gRPC channel
+ * @param channel the gRPC channel to use for sending requests to the API
+ * @param shutdownTimeout the timeout for closing the gRPC channel
  */
 class GrpcIdentityClient(
         private val channel: ManagedChannel,
@@ -48,8 +48,8 @@ class GrpcIdentityClient(
         /**
          * Constructs a new client that connects to specified API endpoint.
          *
-         * @param target - the address of the API endpoint to connect to, e.g. "api.speechly.com"
-         * @param secure - whether to use secured (TLS) or plaintext connection
+         * @param target the address of the API endpoint to connect to, e.g. "api.speechly.com"
+         * @param secure whether to use secured (TLS) or plaintext connection
          */
         fun forTarget(target: String, secure: Boolean): GrpcIdentityClient {
             return GrpcIdentityClient(
