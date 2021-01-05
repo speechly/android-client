@@ -11,7 +11,7 @@ import java.util.Base64
  * This class represents a malformed JWT exception.
  * It is thrown by the code that parses JWTs received from Speechly Identity service.
  *
- * @param message - detailed message describing the specifics of the exception.
+ * @param message detailed message describing the specifics of the exception.
  */
 class InvalidJWTException(message: String) : Exception(message)
 
@@ -19,11 +19,11 @@ class InvalidJWTException(message: String) : Exception(message)
  * This data class represents an authentication token that can be used to access public Speechly API.
  * The token is usually obtained from Speechly Identity Service and can be cached for its expiration period.
  *
- * @param appId - the ID of Speechly application that will be accessed with this token.
- * @param deviceId - Speechly device identifier that is authorised to use this token.
- * @param expiresAt - the timestamp of token expiration.
- * @param authScopes - Speechly APIs that can be accessed with this token.
- * @param tokenString - the token value that should be passed to API when accessing it.
+ * @param appId the ID of Speechly application that will be accessed with this token.
+ * @param deviceId Speechly device identifier that is authorised to use this token.
+ * @param expiresAt the timestamp of token expiration.
+ * @param authScopes Speechly APIs that can be accessed with this token.
+ * @param tokenString the token value that should be passed to API when accessing it.
  */
 data class AuthToken(
         val appId: UUID,
@@ -43,7 +43,7 @@ data class AuthToken(
         /**
          * Parses the authentication token from its string representation.
          *
-         * @param jwt - the string representation of the token,
+         * @param jwt the string representation of the token,
          * normally returned by Speechly Identity service.
          */
         fun fromJWT(jwt: String): AuthToken {
@@ -86,9 +86,9 @@ data class AuthToken(
      * Validates the token against provided identifiers and expiration date.
      * Returns true if the token is valid, false otherwise.
      *
-     * @param appId - Speechly application ID to verify against.
-     * @param deviceId - Speechly device ID to verify against.
-     * @param expiresAt - timestamp to check expiration against.
+     * @param appId Speechly application ID to verify against.
+     * @param deviceId Speechly device ID to verify against.
+     * @param expiresAt timestamp to check expiration against.
      */
     fun validate(appId: UUID, deviceId: UUID, expiresAt: Instant): Boolean {
         return this.appId == appId && this.deviceId == deviceId && this.validateExpiry(expiresAt)
@@ -97,7 +97,7 @@ data class AuthToken(
     /**
      * Validates the expiry of the token against provided timestamp.
      *
-     * @param expiresAt - timestamp to check expiration against.
+     * @param expiresAt timestamp to check expiration against.
      */
     fun validateExpiry(expiresAt: Instant): Boolean {
         return this.expiresAt.isBefore(expiresAt)
