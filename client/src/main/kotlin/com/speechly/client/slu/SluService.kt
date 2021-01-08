@@ -3,12 +3,11 @@ package com.speechly.client.slu
 import com.speechly.api.slu.v1.Slu
 import com.speechly.client.identity.AuthToken
 import java.io.Closeable
-import java.lang.Exception
 
 /**
  * This class represents an exception indicating that there is no active stream to interact with.
  */
-class NoActiveStreamException : Exception("No active SLU stream available")
+class NoActiveStreamException : Throwable("No active SLU stream available")
 
 /**
  * This class represents a service that performs streaming recognition using Speechly SLU API.

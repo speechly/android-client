@@ -8,7 +8,6 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import strikt.api.*
 import strikt.assertions.*
-import java.lang.Exception
 import java.time.Instant
 import java.util.*
 
@@ -17,7 +16,7 @@ internal class IdentityServiceTest {
     @MethodSource("authenticateArgs")
     fun shouldAuthenticate(
         token: String,
-        exception: Exception?,
+        exception: Throwable?,
         want: AuthToken,
         wantException: Boolean
     ) = runBlocking<Unit> {
@@ -65,7 +64,7 @@ internal class IdentityServiceTest {
             ),
             Arguments.of(
                 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBJZCI6IjExMTExMTExLTExMTEtMTExMS0xMTExLTExMTExMTExMTExMSIsImRldmljZUlkIjoiMjIyMjIyMjItMjIyMi0yMjIyLTIyMjItMjIyMjIyMjIyMjIyIiwiY29uZmlnSWQiOiIzMzMzMzMzMy0zMzMzLTMzMzMtMzMzMy0zMzMzMzMzMzMzMzMiLCJsYW5ndWFnZUNvZGUiOiJlbi1VUyIsInNjb3BlIjoic2x1IHdsdSIsImlzcyI6Imh0dHBzOi8vYXBpLnNwZWVjaGx5LmNvbSIsImF1ZCI6Imh0dHBzOi8vYXBpLnNwZWVjaGx5LmNvbSIsImlhdCI6MTU5OTIzOTAyMiwiZXhwIjoxOTA5MjM5MDIyfQ.zBvA4ahMj5LAzDac61rvw0KwW35X7XkTIiY8AvYf_4I",
-                Exception("some exception"),
+                Throwable("some exception"),
                 AuthToken(
                     appId = UUID.randomUUID(),
                     deviceId = UUID.randomUUID(),
@@ -81,7 +80,7 @@ internal class IdentityServiceTest {
 
 private class MockIdentityClient(
     private val response: IdentityOuterClass.LoginResponse,
-    private val exception: Exception?
+    private val exception: Throwable?
 ) : IdentityClient {
     override suspend fun login(request: IdentityOuterClass.LoginRequest): IdentityOuterClass.LoginResponse {
         if (this.exception != null) {

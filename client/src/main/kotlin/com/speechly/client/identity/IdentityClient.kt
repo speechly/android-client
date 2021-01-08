@@ -6,7 +6,6 @@ import com.speechly.client.grpc.buildChannel
 import io.grpc.ManagedChannel
 import io.grpc.Status
 import java.io.Closeable
-import java.lang.Exception
 import java.util.concurrent.TimeUnit
 
 /**
@@ -24,12 +23,12 @@ interface IdentityClient : Closeable {
 /**
  * An exception that represents an invalid appId rejected by the API.
  */
-class InvalidApplicationException(message: String): Exception(message)
+class InvalidApplicationException(message: String): Throwable(message)
 
 /**
  * An exception that represents a general authentication error returned by the API.
  */
-class AuthenticationException(message: String): Exception(message)
+class AuthenticationException(message: String): Throwable(message)
 
 
 /**
@@ -63,11 +62,11 @@ class GrpcIdentityClient(
 
         try {
             response = this.clientStub.login(request)
-        } catch (e: Exception) {
-            when (val s = Status.fromThrowable(e)) {
+        } catch (t: Throwable) {
+            when (val s = Status.fromThrowable(t)) {
                 Status.PERMISSION_DENIED -> throw AuthenticationException(s.description ?: "Authentication failed")
                 Status.NOT_FOUND -> throw InvalidApplicationException(s.description ?: "Invalid appId")
-                else -> throw e
+                else -> throw t
             }
         }
 

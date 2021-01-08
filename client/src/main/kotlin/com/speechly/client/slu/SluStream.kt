@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import java.io.Closeable
-import java.lang.Exception
 
 private val startReq: Slu.SLURequest = Slu.SLURequest
         .newBuilder()
@@ -89,7 +88,7 @@ data class StreamConfig(
 /**
  * This class represents an exception thrown when trying to interact with a closed stream.
  */
-class StreamClosedException: Exception("SLU stream is closed")
+class StreamClosedException: Throwable("SLU stream is closed")
 
 /**
  * A SLU stream implementation backed by Speechly gRPC SLU API.
