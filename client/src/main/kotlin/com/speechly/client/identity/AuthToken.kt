@@ -2,7 +2,6 @@ package com.speechly.client.identity
 
 import com.beust.klaxon.Json
 import com.beust.klaxon.Klaxon
-import java.lang.Exception
 import java.time.Instant
 import java.util.UUID
 import java.util.Base64
@@ -13,7 +12,7 @@ import java.util.Base64
  *
  * @param message detailed message describing the specifics of the exception.
  */
-class InvalidJWTException(message: String) : Exception(message)
+class InvalidJWTException(message: String) : Throwable(message)
 
 /**
  * This data class represents an authentication token that can be used to access public Speechly API.
