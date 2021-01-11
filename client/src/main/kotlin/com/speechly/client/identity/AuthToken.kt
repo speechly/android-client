@@ -99,7 +99,7 @@ data class AuthToken(
      * @param expiresAt timestamp to check expiration against.
      */
     fun validateExpiry(expiresAt: Instant): Boolean {
-        return this.expiresAt.isBefore(expiresAt)
+        return this.expiresAt.isAfter(expiresAt)
     }
 }
 
