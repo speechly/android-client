@@ -23,7 +23,7 @@ internal class IdentityServiceTest {
         val id = UUID.randomUUID()
         val response = IdentityOuterClass.LoginResponse.newBuilder().setToken(token).build()
         val client = MockIdentityClient(response, exception)
-        val service = IdentityService(client)
+        val service = BasicIdentityService(client)
 
         if (wantException) {
             expectCatching {
