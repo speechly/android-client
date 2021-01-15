@@ -1,7 +1,7 @@
 package com.speechly.client.identity
 
 import com.speechly.api.identity.v1.IdentityOuterClass
-import com.speechly.client.cache.PersistentCache
+import com.speechly.client.cache.CacheService
 import java.io.Closeable
 import java.time.Instant
 import java.util.UUID
@@ -67,28 +67,28 @@ class BasicIdentityService(
  * and using a persistent cache to store them for future use.
  *
  * @param baseService an IdentityService implementation used for fetching tokens in case of cache miss
- * @param cache an implementation of PersistentCache that is used for storing cached tokens
+ * @param cacheService an implementation of PersistentCache that is used for storing cached tokens
  */
 class CachingIdentityService(
         private val baseService: IdentityService,
-        private val cache: PersistentCache
+        private val cacheService: CacheService
 ) : IdentityService {
     companion object {
         /**
          * Creates a new identity service using default gRPC client implementation.
          *
-         * @param cache an implementation of PersistentCache that is used for storing cached tokens
+         * @param cacheService an implementation of PersistentCache that is used for storing cached tokens
          * @param target the address of the API endpoint to connect to, e.g. "api.speechly.com"
          * @param secure whether to use secured (TLS) or plaintext connection
          */
         fun forTarget(
-                cache: PersistentCache,
+                cacheService: CacheService,
                 target: String = "api.speechly.com",
                 secure: Boolean = true
         ): CachingIdentityService {
             return CachingIdentityService(
                     BasicIdentityService.forTarget(target, secure),
-                    cache,
+                    cacheService,
             )
         }
     }
@@ -112,7 +112,7 @@ class CachingIdentityService(
     }
 
     private fun loadToken(appId: UUID, deviceId: UUID): AuthToken? {
-        val cacheValue = this.cache.loadString(this.makeCacheKey(appId, deviceId)) ?: return null
+        val cacheValue = this.cacheService.loadString(this.makeCacheKey(appId, deviceId)) ?: return null
 
         return try {
             AuthToken.fromJWT(cacheValue)
@@ -124,7 +124,7 @@ class CachingIdentityService(
     private suspend fun reloadToken(appId: UUID, deviceId: UUID): AuthToken {
         val token = this.baseService.authenticate(appId, deviceId)
 
-        this.cache.storeString(this.makeCacheKey(token.appId, token.deviceId), token.tokenString)
+        this.cacheService.storeString(this.makeCacheKey(token.appId, token.deviceId), token.tokenString)
 
         return token
     }

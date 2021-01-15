@@ -1,13 +1,21 @@
 package com.speechly.client.slu
 
-import com.speechly.api.slu.v1.Slu
 import com.speechly.client.identity.AuthToken
 import java.io.Closeable
 
 /**
- * This class represents an exception indicating that there is no active stream to interact with.
+ * This class represents a service that performs streaming recognition using Speechly SLU API.
+ * By default it uses a client that uses Speechly SLU gRPC API.
  */
-class NoActiveStreamException : Throwable("No active SLU stream available")
+interface SluService : Closeable {
+    /**
+     * Starts and returns a new SLU stream.
+     *
+     * @param authToken token to use for authenticating to the API.
+     * @param streamConfig the configuration of the SLU stream.
+     */
+    fun stream(authToken: AuthToken, streamConfig: StreamConfig): SluStream
+}
 
 /**
  * This class represents a service that performs streaming recognition using Speechly SLU API.
@@ -15,9 +23,7 @@ class NoActiveStreamException : Throwable("No active SLU stream available")
  *
  * @param client an implementation of SLU client logic.
  */
-class SluService(private val client: SluClient): Closeable {
-    private val streams: MutableList<SluStream> = mutableListOf()
-
+class StreamingSluService(private val client: SluClient): SluService {
     companion object {
         /**
          * Creates a new SLU service using default gRPC client implementation.
@@ -28,88 +34,18 @@ class SluService(private val client: SluClient): Closeable {
         fun forTarget(
                 target: String = "api.speechly.com",
                 secure: Boolean = true
-        ): SluService {
-            return SluService(
+        ): StreamingSluService {
+            return StreamingSluService(
                 GrpcSluClient.forTarget(target, secure)
             )
         }
     }
 
-    /**
-     * Starts a new SLU stream and marks it as current for reading and writing.
-     *
-     * @param authToken token to use for authenticating to the API.
-     * @param streamConfig the configuration of the SLU stream.
-     */
-    fun startStream(authToken: AuthToken, streamConfig: StreamConfig) {
-        this.newStream(authToken, streamConfig)
-    }
-
-    /**
-     * Stops currently active SLU stream and blocks until it has been drained.
-     */
-    fun stopStream() {
-        // Always stop the currently active read stream.
-        val stream = this.getReadStream()
-
-        // Start closing it and wait until its drained.
-        stream.close()
-
-        // Once drained, we can remove it from the list.
-        this.streams.remove(stream)
-    }
-
-    /**
-     * Starts and returns a new SLU stream.
-     *
-     * @param authToken token to use for authenticating to the API.
-     * @param streamConfig the configuration of the SLU stream.
-     */
-    fun newStream(authToken: AuthToken, streamConfig: StreamConfig): SluStream {
-        val stream = this.client.stream(authToken, streamConfig)
-        this.streams.add(stream)
-        return stream
-    }
-
-    /**
-     * Reads a response from current stream, when available.
-     */
-    suspend fun read(): Slu.SLUResponse {
-        return this.getReadStream().read()
-    }
-
-    /**
-     * Writes an audio chunk to current stream.
-     *
-     * @param audioChunk a chunk of binary audio data.
-     */
-    suspend fun write(audioChunk: ByteArray) {
-        return this.getWriteStream().write(audioChunk)
+    override fun stream(authToken: AuthToken, streamConfig: StreamConfig): SluStream {
+        return this.client.stream(authToken, streamConfig)
     }
 
     override fun close() {
-        this.streams.forEach {
-            it.close()
-        }
-
         this.client.close()
-    }
-
-    private fun getReadStream(): SluStream {
-        if (this.streams.isEmpty()) {
-            throw NoActiveStreamException()
-        }
-
-        // Always use the last stream for reading.
-        return this.streams.last()
-    }
-
-    private fun getWriteStream(): SluStream {
-        if (this.streams.isEmpty()) {
-            throw NoActiveStreamException()
-        }
-
-        // Always use the first stream for writing.
-        return this.streams.first()
     }
 }

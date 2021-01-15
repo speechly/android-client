@@ -1,6 +1,6 @@
 package com.speechly.client.device
 
-import com.speechly.client.cache.PersistentCache
+import com.speechly.client.cache.CacheService
 import java.util.UUID
 
 /**
@@ -39,8 +39,8 @@ class RandomIdProvider : DeviceIdProvider {
  * By default it uses a random id provider for generating a new id in case of a cache miss.
  */
 class CachingIdProvider(
-        private val baseProvider: DeviceIdProvider = RandomIdProvider(),
-        private val cache: PersistentCache
+        private val cacheService: CacheService,
+        private val baseProvider: DeviceIdProvider = RandomIdProvider()
 ) : DeviceIdProvider {
     private val cacheKey = "speechly-device-id"
 
@@ -49,7 +49,7 @@ class CachingIdProvider(
     }
 
     private fun loadFromCache(): DeviceId? {
-        val cached = this.cache.loadString(this.cacheKey) ?: return null
+        val cached = this.cacheService.loadString(this.cacheKey) ?: return null
 
         return try {
             UUID.fromString(cached)
@@ -63,7 +63,7 @@ class CachingIdProvider(
 
         // `storeString` returns false if the write operation has failed.
         // Current we choose to ignore failed writes and instead re-generate the id on the next call.
-        this.cache.storeString(this.cacheKey, id.toString())
+        this.cacheService.storeString(this.cacheKey, id.toString())
 
         return id
     }

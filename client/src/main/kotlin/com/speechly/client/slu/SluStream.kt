@@ -34,11 +34,6 @@ private val stopReq: Slu.SLURequest = Slu.SLURequest
  */
 interface SluStream : Closeable {
     /**
-     * Reads a response from the stream, when available.
-     */
-    suspend fun read(): Slu.SLUResponse
-
-    /**
      * Writes an audio chunk to a stream.
      *
      * @param audioChunk a chunk of binary audio data.
@@ -46,9 +41,14 @@ interface SluStream : Closeable {
     suspend fun write(audioChunk: ByteArray)
 
     /**
-     * Returns a Flow containing the responses.
+     * Returns a Flow containing individual responses (transcripts, entities and intents).
      */
-    fun asFlow(): Flow<Slu.SLUResponse>
+    fun toFlow(): Flow<Response>
+
+    /**
+     * Returns a Flow containing segment states.
+     */
+    fun toSegmentFlow(): Flow<Segment>
 
     /**
      * Returns true when the stream has been acknowledged by the API, false otherwise.
@@ -161,15 +161,6 @@ class GrpcSluStream(
     }
 
     @ExperimentalCoroutinesApi
-    override suspend fun read(): Slu.SLUResponse {
-        if (this.responseChannel.isClosedForReceive) {
-            throw StreamClosedException()
-        }
-
-        return this.responseChannel.receive()
-    }
-
-    @ExperimentalCoroutinesApi
     override suspend fun write(audioChunk: ByteArray) {
         if (this.requestChannel.isClosedForSend) {
             throw StreamClosedException()
@@ -178,8 +169,24 @@ class GrpcSluStream(
         this.requestChannel.send(audioChunk)
     }
 
-    override fun asFlow(): Flow<Slu.SLUResponse> {
-        return this.responseChannel.receiveAsFlow()
+    private val segments: MutableMap<Int, Segment> = mutableMapOf()
+    override fun toFlow(): Flow<Response> {
+        return this.responseChannel.receiveAsFlow().map {
+            // TODO: update and emit segment state here.
+            // TODO: map responses here.
+            Transcript(
+                    contextId = "",
+                    segmentId = 0,
+                    isFinal = true,
+                    index =  0,
+                    value = "",
+            )
+        }
+    }
+
+    override fun toSegmentFlow(): Flow<Segment> {
+        // TODO: stream segment states here.
+        TODO("Not yet implemented")
     }
 
     override fun hasStarted(): Boolean {
