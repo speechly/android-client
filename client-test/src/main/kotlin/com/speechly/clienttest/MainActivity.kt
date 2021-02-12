@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity() {
     private var textView: TextView? = null
     private var recyclerView: RecyclerView? = null
     private lateinit var repoAdapter: RepoRecyclerAdapter
-    private var lunguageFilter: String? = null
+    private var languageFilter: String? = null
     private var sortField: String? = null
 
     private var buttonTouchListener = object : View.OnTouchListener {
