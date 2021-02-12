@@ -10,3 +10,5 @@ github.properties
 # Local properties
 local.properties
 
+.idea
+.DS_Store

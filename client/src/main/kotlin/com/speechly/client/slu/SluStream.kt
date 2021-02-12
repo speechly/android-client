@@ -2,30 +2,27 @@ package com.speechly.client.slu
 
 import com.google.protobuf.ByteString
 import com.speechly.api.slu.v1.SLUGrpcKt
-import com.speechly.api.slu.v1.Slu
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import com.speechly.api.slu.v1.Slu.*
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.*
 import java.io.Closeable
 
-private val startReq: Slu.SLURequest = Slu.SLURequest
+private val startReq: SLURequest = SLURequest
         .newBuilder()
         .setEvent(
-                Slu.SLUEvent
+                SLUEvent
                         .newBuilder()
-                        .setEvent(Slu.SLUEvent.Event.START)
+                        .setEvent(SLUEvent.Event.START)
                         .build()
         ).build()
 
-private val stopReq: Slu.SLURequest = Slu.SLURequest
+private val stopReq: SLURequest = SLURequest
         .newBuilder()
         .setEvent(
-                Slu.SLUEvent
+                SLUEvent
                         .newBuilder()
-                        .setEvent(Slu.SLUEvent.Event.STOP)
+                        .setEvent(SLUEvent.Event.STOP)
                         .build()
         ).build()
 
@@ -34,32 +31,14 @@ private val stopReq: Slu.SLURequest = Slu.SLURequest
  */
 interface SluStream : Closeable {
     /**
-     * Reads a response from the stream, when available.
+     * Returns a Flow containing individual responses (transcripts, entities and intents).
      */
-    suspend fun read(): Slu.SLUResponse
+//    fun toFlow(): Flow<Response>
 
     /**
-     * Writes an audio chunk to a stream.
-     *
-     * @param audioChunk a chunk of binary audio data.
+     * Returns a Flow containing segment states.
      */
-    suspend fun write(audioChunk: ByteArray)
-
-    /**
-     * Returns a Flow containing the responses.
-     */
-    fun asFlow(): Flow<Slu.SLUResponse>
-
-    /**
-     * Returns true when the stream has been acknowledged by the API, false otherwise.
-     * After the stream is closed, this will continue to return true.
-     */
-    fun hasStarted(): Boolean
-
-    /**
-     * Returns true when the stream has been closed by the API, false otherwise.
-     */
-    fun isClosed(): Boolean
+//    suspend fun toSegmentFlow(): Flow<Segment>
 }
 
 /**
@@ -84,7 +63,6 @@ data class StreamConfig(
     }
 }
 
-
 /**
  * This class represents an exception thrown when trying to interact with a closed stream.
  */
@@ -102,105 +80,37 @@ class StreamClosedException: Throwable("SLU stream is closed")
 class GrpcSluStream(
         clientStub: SLUGrpcKt.SLUCoroutineStub,
         streamConfig: StreamConfig,
-        private val requestChannel: Channel<ByteArray> = Channel(),
-        private val responseChannel: Channel<Slu.SLUResponse> = Channel()
+        audioFlow: Flow<ByteArray>
+//        private val responseChannel: Channel<Slu.SLUResponse> = Channel()
 ) : SluStream {
-    private var isClosed: Boolean = false
-    private var isStarted: Boolean = false
-
+    var responseFlow: Flow<SLUResponse>? = null
     init {
-        val channel = this.requestChannel
-        val requestFlow: Flow<Slu.SLURequest> = flow {
-            // The builder is re-used for sending audio requests
-            val builder = Slu.SLURequest.newBuilder()
-            val configReq = builder.setConfig(
-                    Slu.SLUConfig.newBuilder()
-                            .setChannels(streamConfig.channelCount)
-                            .setSampleRateHertz(streamConfig.sampleRateHertz)
-                            .setLanguageCode(streamConfig.languageCode.stringValue)
-                            .setEncoding(Slu.SLUConfig.Encoding.LINEAR16)
-                            .build()
-            ).build()
+        val builder = SLURequest.newBuilder()
+        val configReq = builder.setConfig(
+                SLUConfig.newBuilder()
+                        .setChannels(streamConfig.channelCount)
+                        .setSampleRateHertz(streamConfig.sampleRateHertz)
+                        .setLanguageCode(streamConfig.languageCode.stringValue)
+                        .setEncoding(SLUConfig.Encoding.LINEAR16)
+                        .build()
+        ).build()
 
-            // According to protocol spec, first message in the stream has to be a SLU config.
-            emit(configReq)
-
-            // The client is design to send a single utterance per gRPC stream for simplicity,
-            // so each stream sends a START event in the beginning.
-            emit(startReq)
-
-            // Main loop that sends audio chunks to the stream.
-            for (chunk in channel) {
-                val byteStr = ByteString.copyFrom(chunk)
-                val req = builder.setAudio(byteStr).build()
-
-                emit(req)
+        val requestFlow: Flow<SLURequest> = flow {
+            audioFlow.collect { chunk ->
+                val audioReq: SLURequest = SLURequest.newBuilder().setAudio(ByteString.copyFrom(chunk)).build()
+                emit(audioReq)
             }
-
-            // When no more audio chunks are to be send, terminate the stream with a STOP event.
+        }.onStart {
+            emit(configReq)
+            emit(startReq)
+        }.onCompletion {
             emit(stopReq)
         }
 
-        clientStub.stream(requestFlow).map { response ->
-            if (this.responseChannel.isClosedForSend) {
-                throw StreamClosedException()
-            }
-
-            when (response.streamingResponseCase) {
-                Slu.SLUResponse.StreamingResponseCase.STARTED -> {
-                    this.isStarted = true
-                }
-                Slu.SLUResponse.StreamingResponseCase.FINISHED -> {
-                    this.isClosed = true
-                }
-                else -> {
-                    this.responseChannel.send(response)
-                }
-            }
-        }
-    }
-
-    @ExperimentalCoroutinesApi
-    override suspend fun read(): Slu.SLUResponse {
-        if (this.responseChannel.isClosedForReceive) {
-            throw StreamClosedException()
-        }
-
-        return this.responseChannel.receive()
-    }
-
-    @ExperimentalCoroutinesApi
-    override suspend fun write(audioChunk: ByteArray) {
-        if (this.requestChannel.isClosedForSend) {
-            throw StreamClosedException()
-        }
-
-        this.requestChannel.send(audioChunk)
-    }
-
-    override fun asFlow(): Flow<Slu.SLUResponse> {
-        return this.responseChannel.receiveAsFlow()
-    }
-
-    override fun hasStarted(): Boolean {
-        return this.isStarted
-    }
-
-    override fun isClosed(): Boolean {
-        return this.isClosed
+        responseFlow = clientStub.stream(requestFlow)
     }
 
     @ExperimentalCoroutinesApi
     override fun close() {
-        // Close the request channel first, to indicate to the API that no more data is to be sent.
-        this.requestChannel.close()
-
-        // Wait for responses to be drained.
-        while (!this.responseChannel.isEmpty) {
-            Thread.sleep(10)
-        }
-
-        // Close the response channel as well and terminate the stream.
-        this.responseChannel.close()
     }
 }

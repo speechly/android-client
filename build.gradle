@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = "1.4.20"
+    ext.kotlin_version = "1.4.30"
     ext.kotlin_coroutines_version = "1.4.2"
 
     repositories {
@@ -8,18 +8,47 @@ buildscript {
     }
 
     dependencies {
-        classpath "com.android.tools.build:gradle:4.1.1"
+        classpath 'com.android.tools.build:gradle:4.1.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
+}
+
+task clean (type: Delete) {
+    delete rootProject.buildDir
 }
 
 allprojects {
     repositories {
         google()
         jcenter()
+
+        maven {
+            name = "github.speechly.api"
+            url = uri("https://maven.pkg.github.com/speechly/api")
+
+            credentials {
+                def (githubUser, githubToken) = getGithubCredentials()
+                username = githubUser
+                password = githubToken
+            }
+        }
     }
 }
 
-task clean (type: Delete) {
-    delete rootProject.buildDir
+private def getGithubCredentials() {
+    def localPropertiesFile = project.rootProject.file('local.properties')
+    if (!localPropertiesFile.exists()) {
+        return [
+                System.getenv("GITHUB_USERNAME"),
+                System.getenv("GITHUB_TOKEN")
+        ]
+    }
+
+    Properties properties = new Properties()
+    properties.load(localPropertiesFile.newDataInputStream())
+
+    return [
+            properties.getProperty("gpr.user"),
+            properties.getProperty("gpr.token")
+    ]
 }

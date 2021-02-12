@@ -6,7 +6,7 @@ import android.content.SharedPreferences
 /**
  * An interface for a persistent cache for storing key-value pairs in the device storage.
  */
-interface PersistentCache {
+interface CacheService {
     /**
      * Reads the specified key from the cache and returns the data as string.
      * If the key is missing or the data cannot be parsed into a string, returns null.
@@ -31,7 +31,7 @@ interface PersistentCache {
  * A user must ensure that preference files are not shared by multiple applications
  * by providing app-specific file names.
  */
-class SharedPreferencesCache(private val preferences: SharedPreferences) : PersistentCache {
+class SharedPreferencesCache(private val preferences: SharedPreferences) : CacheService {
     companion object {
         const val PREFERENCE_FILE_KEY = "speechly.preferences.cache"
 

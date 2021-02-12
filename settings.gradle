@@ -1,2 +1,1 @@
-include ':client'
-rootProject.buildFileName = 'build.gradle'
+include ':client-test', ':client'
