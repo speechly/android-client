@@ -9,6 +9,7 @@ import io.grpc.stub.MetadataUtils
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.io.Closeable
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.flow.Flow
 
 /**
  * An interface representing a client for Speechly SLU API.
@@ -20,7 +21,7 @@ interface SluClient : Closeable {
      * @param authToken token to use for authenticating to the API.
      * @param streamConfig the configuration of the SLU stream.
      */
-    fun stream(authToken: AuthToken, streamConfig: StreamConfig): SluStream
+    fun stream(authToken: AuthToken, streamConfig: StreamConfig, audioFlow: Flow<ByteArray>): SluStream
 }
 
 /**
@@ -50,7 +51,7 @@ class GrpcSluClient(
     }
 
     @ExperimentalCoroutinesApi
-    override fun stream(authToken: AuthToken, streamConfig: StreamConfig): GrpcSluStream {
+    override fun stream(authToken: AuthToken, streamConfig: StreamConfig, audioFlow: Flow<ByteArray>): GrpcSluStream {
         val metadata = Metadata()
         metadata.put(
             Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER),
@@ -59,7 +60,8 @@ class GrpcSluClient(
 
         return GrpcSluStream(
                 MetadataUtils.attachHeaders(this.clientStub, metadata),
-                streamConfig
+                streamConfig,
+                audioFlow
         )
     }
 

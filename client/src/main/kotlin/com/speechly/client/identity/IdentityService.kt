@@ -88,7 +88,7 @@ class CachingIdentityService(
         ): CachingIdentityService {
             return CachingIdentityService(
                     BasicIdentityService.forTarget(target, secure),
-                    cacheService,
+                    cacheService
             )
         }
     }
