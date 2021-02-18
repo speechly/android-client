@@ -1,6 +1,5 @@
 package com.speechly.clienttest
 
-import android.app.Activity
 import android.os.Bundle
 import android.view.MotionEvent
 import android.view.View
@@ -34,7 +33,11 @@ val repoList = listOf(
 
 class MainActivity : AppCompatActivity() {
 
-    private var speechlyClient: Client? = null
+    private var speechlyClient: Client = Client.fromActivity(
+            activity = getActivity(),
+            appId = UUID.randomUUID()
+    )
+
     private var button: SpeechlyButton? = null
     private var textView: TextView? = null
     private var recyclerView: RecyclerView? = null
@@ -48,7 +51,7 @@ class MainActivity : AppCompatActivity() {
                 MotionEvent.ACTION_DOWN -> {
                     textView?.visibility = View.VISIBLE
                     textView?.text = ""
-                    speechlyClient!!.startContext()
+                    speechlyClient?.startContext()
                 }
                 MotionEvent.ACTION_UP -> {
                     speechlyClient!!.stopContext()
@@ -62,24 +65,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun getActivity(): Activity {
+    fun getActivity(): AppCompatActivity {
         return this
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        this.button = findViewById<SpeechlyButton>(R.id.speechly)
+        this.button = findViewById(R.id.speechly)
         this.recyclerView = findViewById(R.id.recycler_view)
         this.textView = findViewById(R.id.textView)
         textView?.visibility = View.INVISIBLE
 
 
         GlobalScope.launch(Dispatchers.Default) {
-            speechlyClient = Client.fromActivity(
-                    activity = getActivity(),
-                    appId = UUID.fromString(UUID.randomUUID().toString())
-            )
             speechlyClient?.onSegmentChange { segment: Segment ->
                 val transcript: String = segment.words.values.map{it.value}.joinToString(" ")
 
@@ -89,7 +89,7 @@ class MainActivity : AppCompatActivity() {
                     if (segment.intent != null) {
                         when(segment.intent?.intent) {
                             "filter" -> {
-                                lunguageFilter = segment.getEntityByType("language")?.value
+                                languageFilter = segment.getEntityByType("language")?.value
                                 updateList()
                             }
                             "sort" -> {
@@ -97,7 +97,7 @@ class MainActivity : AppCompatActivity() {
                                 updateList()
                             }
                             "reset" -> {
-                                lunguageFilter = null
+                                languageFilter = null
                                 updateList()
                             }
                         }
@@ -118,11 +118,11 @@ class MainActivity : AppCompatActivity() {
 
     fun updateList() {
         val list = repoList.filter { repo: Repo ->
-            lunguageFilter == null || repo.language == lunguageFilter
+            languageFilter == null || repo.language == languageFilter
         }.sortedWith(Comparator { r1: Repo, r2: Repo ->
-            when(sortField) {
-                "NAME" -> if (r1.name > r2.name) 1 else  -1
-                "LANGUAGE" -> if (r1.language > r2.language) 1 else  -1
+            when (sortField) {
+                "NAME" -> if (r1.name > r2.name) 1 else -1
+                "LANGUAGE" -> if (r1.language > r2.language) 1 else -1
                 "FOLLOWERS" -> r2.followers - r1.followers
                 "STARS" -> r2.stars - r1.stars
                 "FORKS" -> r2.forks - r1.forks

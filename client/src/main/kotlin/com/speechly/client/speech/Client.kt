@@ -1,5 +1,9 @@
 package com.speechly.client.speech
 
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.OnLifecycleEvent
 import com.speechly.client.cache.SharedPreferencesCache
 import com.speechly.client.device.CachingIdProvider
 import com.speechly.client.device.DeviceIdProvider
@@ -48,21 +52,32 @@ class Client (
 
     companion object {
         fun fromActivity(
-                activity: android.app.Activity,
+                activity: AppCompatActivity,
                 appId: UUID,
                 language: StreamConfig.LanguageCode = StreamConfig.LanguageCode.EN_US,
                 target: String = "api.speechly.com",
                 secure: Boolean = true
         ): Client {
-            val cache = SharedPreferencesCache.fromContext(activity.getApplicationContext())
+            val cachingIdProvider = CachingIdProvider()
+            val cachingIdentityService = CachingIdentityService.forTarget(target, secure)
+            val audioRecorder = AudioRecorder(activity, 16000)
+            activity.lifecycle.addObserver(object : LifecycleObserver {
+                @OnLifecycleEvent(Lifecycle.Event.ON_START)
+                fun connectListener() {
+                    val cache = SharedPreferencesCache.fromContext(activity.getApplicationContext())
+                    cachingIdProvider.cacheService = cache
+                    cachingIdentityService.cacheService = cache
+                    audioRecorder.buildRecorder()
+                }
+            })
 
             return Client(
                     appId,
                     language,
-                    CachingIdProvider(cache),
-                    CachingIdentityService.forTarget(cache, target, secure),
+                    cachingIdProvider,
+                    cachingIdentityService,
                     GrpcSluClient.forTarget(target, secure),
-                    AudioRecorder(activity, 16000)
+                    audioRecorder
             )
         }
     }
@@ -147,8 +162,7 @@ class Client (
                 streams.add(stream)
 
                 var segment: Segment? = null
-                var contextId: String? = null
-                GlobalScope.launch(Dispatchers.IO) {
+                GlobalScope.launch(Dispatchers.Default) {
                     try {
                         stream.responseFlow?.collect { response: SLUResponse ->
                             if (segment == null) {
