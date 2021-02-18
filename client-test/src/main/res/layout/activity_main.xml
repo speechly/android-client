@@ -5,8 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
-
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -21,7 +19,6 @@
             tools:listitem="@layout/repo" />
 
     </LinearLayout>
-
     <com.speechly.ui.SpeechlyButton
         android:id="@+id/speechly"
         android:layout_width="100dp"
@@ -38,5 +35,4 @@
         android:textSize="20dp"
         android:padding="5dp"
         android:text="TextView" />
-
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
