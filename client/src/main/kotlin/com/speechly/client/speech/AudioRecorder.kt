@@ -7,7 +7,6 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat.requestPermissions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -40,7 +39,7 @@ class AudioRecorder(var activity: AppCompatActivity, val sampleRate: Int) {
                             .setSampleRate(this.sampleRate)
                             .setChannelMask(channelMask)
                             .build())
-                    .setBufferSizeInBytes(bufferSize!!)
+                    .setBufferSizeInBytes(bufferSize)
                     .build()
         } else {
             requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
@@ -52,7 +51,7 @@ class AudioRecorder(var activity: AppCompatActivity, val sampleRate: Int) {
         recorder?.startRecording()
 
         val audioFlow = flow {
-            var audioData: ByteArray = ByteArray(bufferSize!!)
+            var audioData: ByteArray = ByteArray(bufferSize)
             while(recording) {
                 var bytesRead: Int? = recorder?.read(audioData, 0, audioData.size)
                 if (bytesRead != null && bytesRead != 0) {

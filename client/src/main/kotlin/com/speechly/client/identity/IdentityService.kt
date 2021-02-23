@@ -94,7 +94,6 @@ class CachingIdentityService(
     }
 
     override suspend fun authenticate(appId: UUID, deviceId: UUID): AuthToken {
-        println("\n\n\n***** appId ${appId} deviceId ${deviceId} ***** \n\n\n")
         // Try to load the token from the cache.
         val token = this.loadToken(appId, deviceId)
 

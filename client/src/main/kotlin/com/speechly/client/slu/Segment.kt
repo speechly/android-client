@@ -49,7 +49,7 @@ class Segment(
     }
 
     fun finalize() {
-        words = words.filter { (key, word) -> word.isFinal }.toMutableMap()
+        words = words.filter { (_, word) -> word.isFinal }.toMutableMap()
         entities.forEach {(key, entity) -> if (!entity.isFinal) entities.remove(key)}
         if (this.intent?.isFinal == false) {
             this.intent?.intent = ""
