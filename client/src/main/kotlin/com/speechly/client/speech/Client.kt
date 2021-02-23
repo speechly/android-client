@@ -1,5 +1,9 @@
 package com.speechly.client.speech
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.IntentFilter
+import android.media.AudioManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
@@ -20,6 +24,57 @@ import com.speechly.api.slu.v1.Slu.SLUResponse
 import kotlinx.coroutines.flow.Flow
 
 /**
+ * A client for Speechly Spoken Language Understanding (SLU) API.
+ * The client providing a high-level API for interacting with so-called speech segments.
+ */
+interface ApiClient : Closeable {
+    /**
+     * Starts a new SLU context by sending a start context event to the API and unmuting the microphone.
+     */
+    fun startContext()
+    /**
+     * Stops current SLU context by sending a stop context event to the API and muting the microphone
+     * delayed by contextStopDelay = 250 ms
+     */
+    fun stopContext()
+    /**
+     * Adds a listener for current segment change events.
+     * @param block - the callback to invoke on segment change events.
+     */
+    fun onSegmentChange(block: (segment: Segment) -> Unit)
+    /**
+     * Adds a listener for transcript responses from the API.
+     * @param block - the callback to invoke on a transcript response.
+     */
+    fun onTranscript(block: (transcript: Transcript) -> Unit)
+    /**
+     * Adds a listener for tentative transcript responses from the API.
+     * @param block - the callback to invoke on a tentative transcript response.
+     */
+    fun onTentativeTranscript(block: (transcripts: List<Transcript>) -> Unit)
+    /**
+     * Adds a listener for tentative entities responses from the API.
+     * @param block - the callback to invoke on a tentative entities response.
+     */
+    fun onTentativeEntities(block: (entities: List<Entity>) -> Unit)
+    /**
+     * Adds a listener for entity responses from the API.
+     * @param block - the callback to invoke on an entity response.
+     */
+    fun onEntity(block: (entity: Entity) -> Unit)
+    /**
+     * Adds a listener for tentative intent responses from the API.
+     * @param block - the callback to invoke on a tentative intent response.
+     */
+    fun onTentativeIntent(block: (intent: Intent) -> Unit)
+    /**
+     * Adds a listener for intent responses from the API.
+     * @param block - the callback to invoke on an intent response.
+     */
+    fun onIntent(block: (intent: Intent) -> Unit)
+}
+
+/**
  * This class represents an exception indicating that there is no active stream to interact with.
  */
 class NoActiveStreamException : Throwable("No active SLU stream available")
@@ -30,16 +85,17 @@ class Client (
         deviceIdProvider: DeviceIdProvider,
         private val identityService: IdentityService,
         private val sluClient: GrpcSluClient,
-        private val audioRecorder: AudioRecorder
-) : Closeable {
+        private val audioRecorder: AudioRecorder,
+        private val activity: AppCompatActivity,
+) : ApiClient {
     private val streams: MutableList<SluStream> = mutableListOf()
-
     private val deviceId: UUID = deviceIdProvider.getDeviceId()
+    private var audioManager: AudioManager? = null
+    private var bluetoothConnection = false
 
     init {
         GlobalScope.launch(Dispatchers.IO) {
-            // warm-up
-            identityService.authenticate(appId, deviceId)
+            identityService.authenticate(appId, deviceId) // fetch token
         }
     }
 
@@ -58,15 +114,26 @@ class Client (
                 target: String = "api.speechly.com",
                 secure: Boolean = true
         ): Client {
+            val audioRecorder = AudioRecorder(activity, 16000)
             val cachingIdProvider = CachingIdProvider()
             val cachingIdentityService = CachingIdentityService.forTarget(target, secure)
-            val audioRecorder = AudioRecorder(activity, 16000)
             activity.lifecycle.addObserver(object : LifecycleObserver {
                 @OnLifecycleEvent(Lifecycle.Event.ON_START)
                 fun connectListener() {
                     val cache = SharedPreferencesCache.fromContext(activity.getApplicationContext())
                     cachingIdProvider.cacheService = cache
                     cachingIdentityService.cacheService = cache
+
+                    val audioManager = activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                    if (audioManager != null) {
+                        if (audioManager!!.isBluetoothScoAvailableOffCall()) {
+                            if (!audioManager!!.isBluetoothScoOn()) {
+                                audioManager!!.startBluetoothSco()
+                            }
+                        } else {
+                            println("SCO ist not available")
+                        }
+                    }
                     audioRecorder.buildRecorder()
                 }
             })
@@ -77,82 +144,56 @@ class Client (
                     cachingIdProvider,
                     cachingIdentityService,
                     GrpcSluClient.forTarget(target, secure),
-                    audioRecorder
+                    audioRecorder,
+                    activity
             )
         }
     }
 
     var segmentChangeCb: ((segment: Segment) -> Unit)? = null
 
-    /**
-     * Adds a listener for current segment change events.
-     * @param block - the callback to invoke on segment change events.
-     */
-    fun onSegmentChange(block: (segment: Segment) -> Unit) {
+    override fun onSegmentChange(block: (segment: Segment) -> Unit) {
         segmentChangeCb = block
     }
 
     var transcriptCb: ((transcript: Transcript) -> Unit)? = null
 
-    /**
-     * Adds a listener for transcript responses from the API.
-     * @param block - the callback to invoke on a transcript response.
-     */
-    fun onTranscript(block: (transcript: Transcript) -> Unit) {
+    override fun onTranscript(block: (transcript: Transcript) -> Unit) {
         transcriptCb = block
     }
 
     var tentativeTranscriptCb: ((transcripts: List<Transcript>) -> Unit)? = null
 
-    /**
-     * Adds a listener for tentative transcript responses from the API.
-     * @param block - the callback to invoke on a tentative transcript response.
-     */
-    fun onTentativeTranscript(block: (transcripts: List<Transcript>) -> Unit) {
+    override fun onTentativeTranscript(block: (transcripts: List<Transcript>) -> Unit) {
         tentativeTranscriptCb = block
     }
 
     var tentativeEntitiesCb: ((entities: List<Entity>) -> Unit)? = null
 
-    /**
-     * Adds a listener for tentative entities responses from the API.
-     * @param block - the callback to invoke on a tentative entities response.
-     */
-    fun onTentativeEntities(block: (entities: List<Entity>) -> Unit) {
+    override fun onTentativeEntities(block: (entities: List<Entity>) -> Unit) {
         tentativeEntitiesCb = block
     }
 
     var entityCb: ((entity: Entity) -> Unit)? = null
 
-    /**
-     * Adds a listener for entity responses from the API.
-     * @param block - the callback to invoke on an entity response.
-     */
-    fun onEntity(block: (entity: Entity) -> Unit) {
+    override fun onEntity(block: (entity: Entity) -> Unit) {
         entityCb = block
     }
 
     var tentativeIntentCb: ((intent: Intent) -> Unit)? = null
 
-    /**
-     * Adds a listener for tentative intent responses from the API.
-     * @param block - the callback to invoke on a tentative intent response.
-     */
-    fun onTentativeIntent(block: (intent: Intent) -> Unit) {
+    override fun onTentativeIntent(block: (intent: Intent) -> Unit) {
         tentativeIntentCb = block
     }
 
     var intentCb: ((intent: Intent) -> Unit)? = null
 
-    /**
-     * Adds a listener for intent responses from the API.
-     * @param block - the callback to invoke on an intent response.
-     */
-    fun onIntent(block: (intent: Intent) -> Unit) {
+    override fun onIntent(block: (intent: Intent) -> Unit) {
         intentCb = block
     }
 
-    fun startContext() {
+    @kotlinx.coroutines.ExperimentalCoroutinesApi
+    override fun startContext() {
         GlobalScope.launch(Dispatchers.IO) {
             val token = identityService.authenticate(appId, deviceId)
 
@@ -222,6 +263,7 @@ class Client (
                                 SLUResponse.StreamingResponseCase.SEGMENT_END -> {
                                     segment?.finalize()
                                 }
+                                else -> println("Unhandled response case")
                             }
                             segment.let {
                                 segmentChangeCb?.invoke(segment!!)
@@ -238,7 +280,7 @@ class Client (
         }
     }
 
-    fun stopContext() {
+    override fun stopContext() {
         this.audioRecorder.stopRecording()
         val stream = this.getReadStream()
         stream.close()

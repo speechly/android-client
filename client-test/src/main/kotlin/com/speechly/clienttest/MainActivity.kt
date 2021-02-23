@@ -33,8 +33,8 @@ val repoList = listOf(
 
 class MainActivity : AppCompatActivity() {
 
-    private var speechlyClient: Client = Client.fromActivity(
-            activity = getActivity(),
+    private val speechlyClient: Client = Client.fromActivity(
+            activity = this,
             appId = UUID.randomUUID()
     )
 
@@ -63,10 +63,6 @@ class MainActivity : AppCompatActivity() {
             }
             return true
         }
-    }
-
-    fun getActivity(): AppCompatActivity {
-        return this
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
