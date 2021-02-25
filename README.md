@@ -26,17 +26,17 @@ Add android-client to your build.gradle dependencies.
 
 ```gradle
 dependencies {
-  implementation 'com.speechly:android-client:0.1.5'
+  implementation 'com.speechly:android-client:0.1.7'
 }
 ```
 
 ### Client usage
 
 ```kotlin
-val speechlyClient: Client = Client.fromActivity(activity = this, appId = "yourkey")
+val speechlyClient: Client = Client.fromActivity(activity = this, UUID.fromString("yourkey"))
 ```
 
-Check out the [example repo filtering app](https://github.com/speechly/android-client/tree/main/client) for a demo app built using this client.
+Check out the [example repo filtering app](https://github.com/speechly/android-repo-filtering) for a demo app built using this client.
 
 ## About Speechly
 
