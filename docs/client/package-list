@@ -1,0 +1,10 @@
+$dokka.format:gfm-v1
+$dokka.linkExtension:md
+
+com.speechly.client.cache
+com.speechly.client.device
+com.speechly.client.identity
+com.speechly.client.slu
+com.speechly.client.speech
+com.speechly.ui
+

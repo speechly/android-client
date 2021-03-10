@@ -1,5 +1,6 @@
 plugins {
     id 'com.android.library'
+    id 'org.jetbrains.dokka'
     id 'kotlin-android'
     id 'maven-publish'
     id 'com.jfrog.bintray'
@@ -25,6 +26,15 @@ android {
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
+    }
+
+    tasks {
+        dokkaGfm {
+            outputDirectory = new File("${project.rootDir}/docs/")
+            doLast {
+                new File("${project.rootDir}/docs/client/index.md").renameTo("${project.rootDir}/docs/client/README.md")
+            }
+        }
     }
 
     buildTypes {

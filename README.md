@@ -38,6 +38,10 @@ val speechlyClient: Client = Client.fromActivity(activity = this, UUID.fromStrin
 
 Check out the [example repo filtering app](https://github.com/speechly/android-repo-filtering) for a demo app built using this client.
 
+## Documentation
+
+You can find the detailed API documentation in [GitHub repository](https://github.com/speechly/android-client/docs/client/README.md).
+
 ## About Speechly
 
 Speechly is a developer tool for building real-time multimodal voice user interfaces. It enables developers and designers to enhance their current touch user interface with voice functionalities for better user experience. Speechly key features:
