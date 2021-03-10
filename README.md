@@ -40,7 +40,7 @@ Check out the [example repo filtering app](https://github.com/speechly/android-r
 
 ## Documentation
 
-You can find the detailed API documentation in [GitHub repository](https://github.com/speechly/android-client/docs/client/README.md).
+You can find the detailed API documentation in [GitHub repository](https://github.com/speechly/android-client/blob/main/docs/client/README.md).
 
 ## About Speechly
 
