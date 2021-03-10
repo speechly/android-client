@@ -28,8 +28,13 @@ android {
         consumerProguardFiles "consumer-rules.pro"
     }
 
-    dokkaGfm {
-        outputDirectory = new File("${project.rootDir}/docs/")
+    tasks {
+        dokkaGfm {
+            outputDirectory = new File("${project.rootDir}/docs/")
+            doLast {
+                new File("${project.rootDir}/docs/client/index.md").renameTo("${project.rootDir}/docs/client/README.md")
+            }
+        }
     }
 
     buildTypes {
