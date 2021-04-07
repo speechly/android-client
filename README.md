@@ -46,16 +46,10 @@ var buttonTouchListener = object : View.OnTouchListener {
         override fun onTouch(v: View?, event: MotionEvent?): Boolean {
             when (event?.action) {
                 MotionEvent.ACTION_DOWN -> {
-                    textView?.visibility = View.VISIBLE
-                    textView?.text = ""
                     speechlyClient.startContext()
                 }
                 MotionEvent.ACTION_UP -> {
                     speechlyClient.stopContext()
-                    GlobalScope.launch(Dispatchers.Default) {
-                        delay(500)
-                        textView?.visibility = View.INVISIBLE
-                    }
                 }
             }
             return true
