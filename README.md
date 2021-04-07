@@ -34,6 +34,35 @@ dependencies {
 
 ```kotlin
 val speechlyClient: Client = Client.fromActivity(activity = this, UUID.fromString("yourkey"))
+
+speechlyClient.onSegmentChange { segment: Segment ->
+    val transcript: String = segment.words.values.map{it.value}.joinToString(" ")
+    print(transcript)
+}
+
+var button: SpeechlyButton = findViewById(R.id.speechly)
+
+var buttonTouchListener = object : View.OnTouchListener {
+        override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+            when (event?.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    textView?.visibility = View.VISIBLE
+                    textView?.text = ""
+                    speechlyClient.startContext()
+                }
+                MotionEvent.ACTION_UP -> {
+                    speechlyClient.stopContext()
+                    GlobalScope.launch(Dispatchers.Default) {
+                        delay(500)
+                        textView?.visibility = View.INVISIBLE
+                    }
+                }
+            }
+            return true
+        }
+    }
+    
+button.setOnTouchListener(buttonTouchListener)
 ```
 
 Check out the [example repo filtering app](https://github.com/speechly/android-repo-filtering) for a demo app built using this client.
