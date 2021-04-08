@@ -7,8 +7,6 @@ Complete your touch user interface with voice
 
 [Speechly website](https://www.speechly.com/?utm_source=github&utm_medium=android-client&utm_campaign=header)&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Docs](https://www.speechly.com/docs/?utm_source=github&utm_medium=android-client&utm_campaign=header)&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Blog](https://www.speechly.com/blog/?utm_source=github&utm_medium=android-client&utm_campaign=header)
 
-> **Android Emulator version must be >= 30.4.5**
-
 
 # Android client for Speechly SLU API
 
@@ -19,6 +17,7 @@ This repository contains the source code for the Android client for [Speechly](h
 ### Requirements
 
 * Android 8.0 (API level 26) and above
+* Android Emulator version must be >= 30.4.5
 
 ## Usage
 
