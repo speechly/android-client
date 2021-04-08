@@ -12,7 +12,6 @@ Complete your touch user interface with voice
 
 # Android client for Speechly SLU API
 
-![Release build](https://github.com/speechly/android-client/workflows/Release%20build/badge.svg)
 [![License](http://img.shields.io/:license-mit-blue.svg)](LICENSE)
 
 This repository contains the source code for the Android client for [Speechly](https://www.speechly.com/?utm_source=github&utm_medium=android-client&utm_campaign=text) SLU API. Speechly allows you to easily build applications with voice-enabled UIs.
