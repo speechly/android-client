@@ -7,6 +7,9 @@ Complete your touch user interface with voice
 
 [Speechly website](https://www.speechly.com/?utm_source=github&utm_medium=android-client&utm_campaign=header)&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Docs](https://www.speechly.com/docs/?utm_source=github&utm_medium=android-client&utm_campaign=header)&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;[Blog](https://www.speechly.com/blog/?utm_source=github&utm_medium=android-client&utm_campaign=header)
 
+**Android Emulator audio input on macOS may be distorted: not suitable for speech recognition**
+
+
 # Android client for Speechly SLU API
 
 ![Release build](https://github.com/speechly/android-client/workflows/Release%20build/badge.svg)
