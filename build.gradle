@@ -1,18 +1,17 @@
 buildscript {
-    ext.kotlin_version = "1.4.30"
+    ext.kotlin_version = "1.5.10"
     ext.kotlin_coroutines_version = "1.4.2"
     ext.dokkaVersion = '1.4.20'
 
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.1.2'
+        classpath 'com.android.tools.build:gradle:4.2.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:$dokkaVersion"
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
         classpath 'com.github.dcendents:android-maven-gradle-plugin:1.4.1'
     }
 }
@@ -24,7 +23,7 @@ task clean (type: Delete) {
 allprojects {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
 
         maven {
             name = "github.speechly.api"
