@@ -35,7 +35,7 @@ class MainActivity : AppCompatActivity() {
 
     private val speechlyClient: Client = Client.fromActivity(
             activity = this,
-            appId = UUID.randomUUID()
+            appId = UUID.fromString("312137a2-1c8b-47f8-a553-b88b1a884e08")
     )
 
     private var button: SpeechlyButton? = null

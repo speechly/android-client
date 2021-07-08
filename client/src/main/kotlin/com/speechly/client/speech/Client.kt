@@ -1,8 +1,6 @@
 package com.speechly.client.speech
 
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.IntentFilter
 import android.media.AudioManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
@@ -86,12 +84,9 @@ class Client (
         private val identityService: IdentityService,
         private val sluClient: GrpcSluClient,
         private val audioRecorder: AudioRecorder,
-        private val activity: AppCompatActivity,
 ) : ApiClient {
     private val streams: MutableList<SluStream> = mutableListOf()
     private val deviceId: UUID = deviceIdProvider.getDeviceId()
-    private var audioManager: AudioManager? = null
-    private var bluetoothConnection = false
 
     init {
         GlobalScope.launch(Dispatchers.IO) {
@@ -125,14 +120,12 @@ class Client (
                     cachingIdentityService.cacheService = cache
 
                     val audioManager = activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-                    if (audioManager != null) {
-                        if (audioManager!!.isBluetoothScoAvailableOffCall()) {
-                            if (!audioManager!!.isBluetoothScoOn()) {
-                                audioManager!!.startBluetoothSco()
-                            }
-                        } else {
-                            println("SCO ist not available")
+                    if (audioManager.isBluetoothScoAvailableOffCall) {
+                        if (!audioManager.isBluetoothScoOn) {
+                            audioManager.startBluetoothSco()
                         }
+                    } else {
+                        println("SCO ist not available")
                     }
                     audioRecorder.buildRecorder()
                 }
@@ -144,8 +137,7 @@ class Client (
                     cachingIdProvider,
                     cachingIdentityService,
                     GrpcSluClient.forTarget(target, secure),
-                    audioRecorder,
-                    activity
+                    audioRecorder
             )
         }
     }
@@ -196,7 +188,6 @@ class Client (
     override fun startContext() {
         GlobalScope.launch(Dispatchers.IO) {
             val token = identityService.authenticate(appId, deviceId)
-
             try {
                 val audioFlow: Flow<ByteArray> = audioRecorder.startRecording()
                 val stream = sluClient.stream(token, streamConfig, audioFlow)

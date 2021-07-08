@@ -1,6 +1,6 @@
 buildscript {
     ext.kotlin_version = "1.5.10"
-    ext.kotlin_coroutines_version = "1.4.2"
+    ext.kotlin_coroutines_version = "1.5.0"
     ext.dokkaVersion = '1.4.20'
 
     repositories {
@@ -15,6 +15,13 @@ buildscript {
         classpath 'com.github.dcendents:android-maven-gradle-plugin:1.4.1'
     }
 }
+
+// Plugin must be applied to the root project
+plugins {
+    id 'io.github.gradle-nexus.publish-plugin' version "1.1.0"
+    id("org.jetbrains.dokka") version "1.4.32"
+}
+
 
 task clean (type: Delete) {
     delete rootProject.buildDir
@@ -55,3 +62,5 @@ private def getGithubCredentials() {
             properties.getProperty("gpr.token")
     ]
 }
+
+apply from: "${rootDir}/scripts/publish-root.gradle"

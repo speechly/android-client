@@ -1,6 +1,6 @@
 ### Building the project
 
-```
-gradlew build
-gradlew bintrayUpload
+## Publish
+```shell script
+./gradlew publishReleasePublicationToSonatypeRepository --max-workers 1 closeAndReleaseSonatypeStagingRepository
 ```
