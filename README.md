@@ -38,19 +38,34 @@ Add android-client to your build.gradle dependencies.
 
 ```gradle
 dependencies {
-  implementation 'com.speechly:android-client:0.1.7'
+  implementation 'com.speechly:android-client:0.1.11'
 }
 ```
 
+Remember to add permissions for microphone input and network connections as well as audio stream sampling in `AndroidManifest.xml`:
+
+```xml
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+```
+
+
+
+
 ### Client usage
 
-```kotlin
-val speechlyClient: Client = Client.fromActivity(activity = this, UUID.fromString("yourkey"))
+Create a client, usable for the total lifetime of the app:
 
-speechlyClient.onSegmentChange { segment: Segment ->
-    val transcript: String = segment.words.values.map{it.value}.joinToString(" ")
-    print(transcript)
-}
+```kotlin
+val speechlyClient: Client = Client.fromActivity(activity = this, UUID.fromString("your APP_ID"))
+
+```
+
+Then, create a button which handles the opening and closing of the microphone:
+
+
+```kotlin
 
 var button: SpeechlyButton = findViewById(R.id.speechly)
 
@@ -67,8 +82,18 @@ var buttonTouchListener = object : View.OnTouchListener {
             return true
         }
     }
-    
+
 button.setOnTouchListener(buttonTouchListener)
+```
+
+The final thing is to react to the events the API sends back:
+
+```kotlin
+speechlyClient.onSegmentChange { segment: Segment ->
+    val transcript: String = segment.words.values.map{it.value}.joinToString(" ")
+    print(transcript)
+}
+
 ```
 
 Check out the [example repo filtering app](https://github.com/speechly/android-repo-filtering) for a demo app built using this client.
@@ -76,6 +101,8 @@ Check out the [example repo filtering app](https://github.com/speechly/android-r
 ## Documentation
 
 You can find the detailed API documentation in [GitHub repository](https://github.com/speechly/android-client/blob/main/docs/client/README.md).
+
+Also, the [web client tutorial](https://docs.speechly.com/tutorials/web-client/) contains a similar event driven client as we have here.
 
 ## About Speechly
 
