@@ -1,7 +1,8 @@
 package com.speechly.client.identity
 
 import com.speechly.api.identity.v1.IdentityGrpcKt
-import com.speechly.api.identity.v1.IdentityOuterClass
+import com.speechly.api.identity.v1.LoginRequest
+import com.speechly.api.identity.v1.LoginResponse
 import com.speechly.client.grpc.buildChannel
 import io.grpc.ManagedChannel
 import io.grpc.Status
@@ -17,7 +18,7 @@ interface IdentityClient : Closeable {
      *
      * @param request the login request that is sent to the API.
      */
-    suspend fun login(request: IdentityOuterClass.LoginRequest): IdentityOuterClass.LoginResponse
+    suspend fun login(request: LoginRequest): LoginResponse
 }
 
 /**
@@ -57,8 +58,8 @@ class GrpcIdentityClient(
         }
     }
 
-    override suspend fun login(request: IdentityOuterClass.LoginRequest): IdentityOuterClass.LoginResponse {
-        val response: IdentityOuterClass.LoginResponse
+    override suspend fun login(request: LoginRequest): LoginResponse {
+        val response: LoginResponse
 
         try {
             response = this.clientStub.login(request)

@@ -19,10 +19,10 @@ class AudioRecorder(var activity: AppCompatActivity, val sampleRate: Int) {
 
     private var recording = false
     private var recorder: AudioRecord? = null
-    val channelMask = AudioFormat.CHANNEL_IN_MONO
-    val bufferSize = AudioRecord.getMinBufferSize(sampleRate, channelMask, AudioFormat.ENCODING_PCM_16BIT) * 4
+    private val channelMask = AudioFormat.CHANNEL_IN_MONO
+    private val bufferSize = AudioRecord.getMinBufferSize(sampleRate, channelMask, AudioFormat.ENCODING_PCM_16BIT) * 4
 
-    val requestPermissionLauncher = activity.registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+    private val requestPermissionLauncher = activity.registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
             if (isGranted) {
                 buildRecorder()
             } else {
@@ -51,12 +51,11 @@ class AudioRecorder(var activity: AppCompatActivity, val sampleRate: Int) {
         recorder?.startRecording()
 
         val audioFlow = flow {
-            var audioData: ByteArray = ByteArray(bufferSize)
+            val audioData: ByteArray = ByteArray(bufferSize)
             while(recording) {
-                var bytesRead: Int? = recorder?.read(audioData, 0, audioData.size)
+                val bytesRead: Int? = recorder?.read(audioData, 0, audioData.size)
                 if (bytesRead != null && bytesRead != 0) {
-                    val data = audioData
-                    emit(data)
+                    emit(audioData)
                 }
             }
         }

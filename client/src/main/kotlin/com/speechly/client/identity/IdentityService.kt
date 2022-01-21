@@ -1,6 +1,6 @@
 package com.speechly.client.identity
 
-import com.speechly.api.identity.v1.IdentityOuterClass
+import com.speechly.api.identity.v1.LoginRequest
 import com.speechly.client.cache.CacheService
 import java.io.Closeable
 import java.time.Instant
@@ -46,7 +46,7 @@ class BasicIdentityService(
     }
 
     override suspend fun authenticate(appId: UUID, deviceId: UUID): AuthToken {
-        val request = IdentityOuterClass.LoginRequest
+        val request = LoginRequest
             .newBuilder()
             .setAppId(appId.toString())
             .setDeviceId(deviceId.toString())

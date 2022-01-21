@@ -1,10 +1,8 @@
 package com.speechly.client.slu
 
 import com.google.protobuf.ByteString
-import com.speechly.api.slu.v1.SLUGrpcKt
-import com.speechly.api.slu.v1.Slu.*
+import com.speechly.api.slu.v1.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import java.io.Closeable
 
@@ -39,6 +37,7 @@ interface SluStream : Closeable {
      * Returns a Flow containing segment states.
      */
 //    suspend fun toSegmentFlow(): Flow<Segment>
+
 }
 
 /**
@@ -84,6 +83,8 @@ class GrpcSluStream(
 //        private val responseChannel: Channel<Slu.SLUResponse> = Channel()
 ) : SluStream {
     var responseFlow: Flow<SLUResponse>? = null
+    var requestFlow: Flow<SLURequest>? = null
+
     init {
         val builder = SLURequest.newBuilder()
         val configReq = builder.setConfig(
@@ -95,7 +96,7 @@ class GrpcSluStream(
                         .build()
         ).build()
 
-        val requestFlow: Flow<SLURequest> = flow {
+        requestFlow = flow {
             audioFlow.collect { chunk ->
                 val audioReq: SLURequest = SLURequest.newBuilder().setAudio(ByteString.copyFrom(chunk)).build()
                 emit(audioReq)
@@ -107,10 +108,9 @@ class GrpcSluStream(
             emit(stopReq)
         }
 
-        responseFlow = clientStub.stream(requestFlow)
+        responseFlow = clientStub.stream(requestFlow!!)
     }
 
-    @ExperimentalCoroutinesApi
     override fun close() {
     }
 }

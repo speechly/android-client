@@ -6,10 +6,10 @@ import com.speechly.client.identity.AuthToken
 import io.grpc.ManagedChannel
 import io.grpc.Metadata
 import io.grpc.stub.MetadataUtils
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.io.Closeable
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.ExperimentalCoroutinesApi as ExperimentalCoroutinesApi
 
 /**
  * An interface representing a client for Speechly SLU API.
@@ -21,6 +21,7 @@ interface SluClient : Closeable {
      * @param authToken token to use for authenticating to the API.
      * @param streamConfig the configuration of the SLU stream.
      */
+    @ExperimentalCoroutinesApi
     fun stream(authToken: AuthToken, streamConfig: StreamConfig, audioFlow: Flow<ByteArray>): SluStream
 }
 

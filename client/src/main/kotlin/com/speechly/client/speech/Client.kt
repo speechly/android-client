@@ -6,20 +6,20 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
+import com.speechly.api.slu.v1.SLURequest
+import com.speechly.api.slu.v1.SLUResponse
 import com.speechly.client.cache.SharedPreferencesCache
 import com.speechly.client.device.CachingIdProvider
 import com.speechly.client.device.DeviceIdProvider
 import com.speechly.client.identity.CachingIdentityService
 import com.speechly.client.identity.IdentityService
 import com.speechly.client.slu.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.io.Closeable
 import java.util.UUID
-import com.speechly.api.slu.v1.Slu.SLUResponse
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flowOf
 
 /**
  * A client for Speechly Spoken Language Understanding (SLU) API.
@@ -29,6 +29,8 @@ interface ApiClient : Closeable {
     /**
      * Starts a new SLU context by sending a start context event to the API and unmuting the microphone.
      */
+    @DelicateCoroutinesApi
+    @ExperimentalCoroutinesApi
     fun startContext()
     /**
      * Stops current SLU context by sending a stop context event to the API and muting the microphone
@@ -184,7 +186,8 @@ class Client (
         intentCb = block
     }
 
-    @kotlinx.coroutines.ExperimentalCoroutinesApi
+    @DelicateCoroutinesApi
+    @ExperimentalCoroutinesApi
     override fun startContext() {
         GlobalScope.launch(Dispatchers.IO) {
             val token = identityService.authenticate(appId, deviceId)
@@ -229,10 +232,10 @@ class Client (
                                     val entities = mutableListOf<Entity>()
                                     for(sluEntity in response.tentativeEntities.getTentativeEntitiesList()){
                                         val entity = Entity.fromSluEntity(
-                                                response.audioContext,
-                                                response.segmentId,
-                                                sluEntity,
-                                                false)
+                                            response.audioContext,
+                                            response.segmentId,
+                                            sluEntity,
+                                            false)
                                         entities.add(entity)
                                     }
                                     segment?.updateEntities(entities)
@@ -242,10 +245,10 @@ class Client (
                                     val transcripts = mutableListOf<Transcript>()
                                     for(sluTranscript in response.tentativeTranscript.tentativeWordsList){
                                         val transcript = Transcript.fromSluTranscript(
-                                                response.audioContext,
-                                                response.segmentId,
-                                                sluTranscript,
-                                                false)
+                                            response.audioContext,
+                                            response.segmentId,
+                                            sluTranscript,
+                                            false)
                                         transcripts.add(transcript)
                                     }
                                     segment?.updateTranscripts(transcripts)
@@ -253,6 +256,9 @@ class Client (
                                 }
                                 SLUResponse.StreamingResponseCase.SEGMENT_END -> {
                                     segment?.finalize()
+                                }
+                                SLUResponse.StreamingResponseCase.RTT_REQUEST -> {
+                                    // TODO: refactor to send RTTResponse
                                 }
                                 else -> println("Unhandled response case")
                             }

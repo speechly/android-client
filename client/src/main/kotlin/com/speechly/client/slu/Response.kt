@@ -1,7 +1,9 @@
 package com.speechly.client.slu
 
-import com.speechly.api.slu.v1.Slu
-import com.speechly.api.slu.v1.Slu.SLUResponse
+import com.speechly.api.slu.v1.SLUEntity
+import com.speechly.api.slu.v1.SLUResponse
+import com.speechly.api.slu.v1.SLUTranscript
+
 
 sealed class Response {
     abstract val contextId: String
@@ -28,7 +30,7 @@ data class Transcript(
             )
         }
 
-        fun fromSluTranscript(audioContext: String, segmentId: Int, transcript: Slu.SLUTranscript, isFinal: Boolean = true): Transcript {
+        fun fromSluTranscript(audioContext: String, segmentId: Int, transcript: SLUTranscript, isFinal: Boolean = true): Transcript {
             return Transcript(
                     contextId = audioContext,
                     segmentId = segmentId,
@@ -69,7 +71,7 @@ data class Entity(
             )
         }
 
-        fun fromSluEntity(audioContext: String, segmentId: Int, entity: Slu.SLUEntity, isFinal: Boolean = true): Entity {
+        fun fromSluEntity(audioContext: String, segmentId: Int, entity: SLUEntity, isFinal: Boolean = true): Entity {
             return Entity(
                     contextId = audioContext,
                     segmentId = segmentId,
