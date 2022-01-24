@@ -25,8 +25,8 @@ jobs:
           ./gradlew -s publishReleasePublicationToSonatypeRepository --max-workers 1 closeAndReleaseSonatypeStagingRepository
         env:
           ORG_GRADLE_PROJECT_LIBRARY_VERSION: ${{ github.event.release.tag_name }}
-          ORG_GRADLE_PROJECT_OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          ORG_GRADLE_PROJECT_OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-          ORG_GRADLE_PROJECT_SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
-          ORG_GRADLE_PROJECT_SIGNING_KEY_PASSPHRASE: ${{ secrets.SIGNING_KEY_PASSPHRASE }}
-          ORG_GRADLE_PROJECT_SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_OSSRH_USERNAME: ${{ secrets.ORG_GRADLE_PROJECT_OSSRH_USERNAME }}
+          ORG_GRADLE_PROJECT_OSSRH_PASSWORD: ${{ secrets.ORG_GRADLE_PROJECT_OSSRH_PASSWORD }}
+          ORG_GRADLE_PROJECT_SIGNING_KEY_ID: ${{ secrets.ORG_GRADLE_PROJECT_SIGNING_KEY_ID }}
+          ORG_GRADLE_PROJECT_SIGNING_KEY_PASSPHRASE: ${{ secrets.ORG_GRADLE_PROJECT_SIGNING_KEY_PASSPHRASE }}
+          ORG_GRADLE_PROJECT_SIGNING_KEY: ${{ secrets.ORG_GRADLE_PROJECT_SIGNING_KEY }}
