@@ -1,7 +1,7 @@
 buildscript {
     ext.kotlin_version = "1.6.10"
-    ext.kotlin_coroutines_version = '1.6.0'
-    ext.dokkaVersion = '1.4.20'
+    ext.kotlin_coroutines_version = "1.6.0"
+    ext.dokkaVersion = "1.4.20"
 
     repositories {
         google()
@@ -9,21 +9,17 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.4'
+        classpath "com.android.tools.build:gradle:7.0.4"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:$dokkaVersion"
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.4.1'
+        classpath "com.github.dcendents:android-maven-gradle-plugin:1.4.1"
     }
 }
 
 // Plugin must be applied to the root project
 plugins {
-    id 'io.github.gradle-nexus.publish-plugin' version "1.1.0"
-    id("org.jetbrains.dokka") version "1.4.32"
-}
-
-task clean (type: Delete) {
-    delete rootProject.buildDir
+    id "io.github.gradle-nexus.publish-plugin" version "1.1.0"
+    id "org.jetbrains.dokka" version "1.4.32"
 }
 
 allprojects {
@@ -33,4 +29,20 @@ allprojects {
     }
 }
 
-apply from: "${rootDir}/scripts/publish-root.gradle"
+task clean (type: Delete) {
+    delete rootProject.buildDir
+}
+
+group = "com.speechly"
+version = findProperty("LIBRARY_VERSION") ? findProperty("LIBRARY_VERSION") : "1.0-SNAPSHOT"
+
+nexusPublishing {
+    repositories {
+        sonatype {
+            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+            username = findProperty("OSSRH_USERNAME")
+            password = findProperty("OSSRH_PASSWORD")
+        }
+    }
+}
