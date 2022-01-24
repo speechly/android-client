@@ -19,15 +19,10 @@ jobs:
 
         # Builds the release artifacts of the library
       - name: Release build
-        run: ./gradlew :client:assembleRelease
-
-        # Generates other artifacts (javadocJar is optional)
-      - name: Source jar and dokka
-        run: ./gradlew androidSourcesJar javadocJar
-
-        # Runs upload, and then closes & releases the repository
-      - name: Publish to MavenCentral
-        run: ./gradlew -s publishReleasePublicationToSonatypeRepository --max-workers 1 closeAndReleaseSonatypeStagingRepository
+        run: |
+          ./gradlew :android-client:assembleRelease
+          ./gradlew androidSourcesJar javadocJar
+          ./gradlew -s publishReleasePublicationToSonatypeRepository --max-workers 1 closeAndReleaseSonatypeStagingRepository
         env:
           ORG_GRADLE_PROJECT_LIBRARY_VERSION: ${{ github.event.release.tag_name }}
           ORG_GRADLE_PROJECT_OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
