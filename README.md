@@ -3,7 +3,7 @@
    <img src="https://d33wubrfki0l68.cloudfront.net/1e70457a60b0627de6ab966f1e0a40cf56f465f5/b4144/img/logo-speechly-colors.svg" height="48">
 </a>
 
-### Speechly is the Fast, Accurate, and Simple Voice Interface API for Web, Mobile and E‑commerce
+### Real-time automatic speech recognition and natural language understanding tools in one flexible API
 
 [Website](https://www.speechly.com/?utm_source=github&utm_medium=browser-client&utm_campaign=header)
 &ensp;|&ensp;
