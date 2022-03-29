@@ -1,23 +1,22 @@
 <div align="center" markdown="1">
-<a href="https://www.speechly.com/?utm_source=github&utm_medium=browser-client&utm_campaign=header">
-   <img src="https://d33wubrfki0l68.cloudfront.net/1e70457a60b0627de6ab966f1e0a40cf56f465f5/b4144/img/logo-speechly-colors.svg" height="48">
+<a href="https://www.speechly.com">
+   <img src="https://d33wubrfki0l68.cloudfront.net/f15fc952956e1952d6bd23661b7a7ee6b775faaa/c1b30/img/speechly-logo-duo-black.svg" height="48" />
 </a>
 
 ### Real-time automatic speech recognition and natural language understanding tools in one flexible API
 
-[Website](https://www.speechly.com/?utm_source=github&utm_medium=browser-client&utm_campaign=header)
+[Website](https://www.speechly.com/)
 &ensp;|&ensp;
 [Docs](https://docs.speechly.com/)
 &ensp;|&ensp;
 [Discussions](https://github.com/speechly/speechly/discussions)
 &ensp;|&ensp;
-[Blog](https://www.speechly.com/blog/?utm_source=github&utm_medium=browser-client&utm_campaign=header)
+[Blog](https://www.speechly.com/blog/)
 &ensp;|&ensp;
-[Podcast](https://anchor.fm/collin-borns/episodes/The-Speechly-Podcast---Introduction-e15htlq)
+[Podcast](https://anchor.fm/the-speechly-podcast)
 
 ---
 </div>
-
 
 # Android client for Speechly SLU API
 
