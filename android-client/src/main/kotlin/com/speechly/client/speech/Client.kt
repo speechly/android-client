@@ -279,9 +279,10 @@ class Client (
 
     override fun stopContext() {
         this.audioRecorder.stopRecording()
-        val stream = this.getReadStream()
-        stream.close()
-        this.streams.remove(stream)
+        this.getReadStream()?.let {
+            it.close()
+            this.streams.remove(it)
+        }
     }
 
     override fun close() {
@@ -290,9 +291,9 @@ class Client (
         this.identityService.close()
     }
 
-    private fun getReadStream(): SluStream {
+    private fun getReadStream(): SluStream? {
         if (this.streams.isEmpty()) {
-            throw NoActiveStreamException()
+            return null
         }
 
         // Always use the last stream for reading.
