@@ -33,11 +33,7 @@ val repoList = listOf(
 
 class MainActivity : AppCompatActivity() {
 
-    private val speechlyClient: Client = Client.fromActivity(
-            activity = this,
-            appId = UUID.fromString("312137a2-1c8b-47f8-a553-b88b1a884e08")
-    )
-
+    private var speechlyClient: Client? = null
     private var button: SpeechlyButton? = null
     private var textView: TextView? = null
     private var recyclerView: RecyclerView? = null
@@ -69,6 +65,10 @@ class MainActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        speechlyClient = Client.fromActivity(
+            activity = this,
+            appId = UUID.fromString("312137a2-1c8b-47f8-a553-b88b1a884e08")
+        )
         this.button = findViewById(R.id.speechly)
         this.recyclerView = findViewById(R.id.recycler_view)
         this.textView = findViewById(R.id.textView)

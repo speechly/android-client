@@ -1,5 +1,6 @@
 package com.speechly.client.speech
 
+import android.app.Activity
 import android.content.Context
 import android.media.AudioManager
 import androidx.appcompat.app.AppCompatActivity
@@ -105,33 +106,27 @@ class Client (
 
     companion object {
         fun fromActivity(
-                activity: AppCompatActivity,
-                appId: UUID,
-                language: StreamConfig.LanguageCode = StreamConfig.LanguageCode.EN_US,
-                target: String = "api.speechly.com",
-                secure: Boolean = true
+            activity: Activity,
+            appId: UUID,
+            language: StreamConfig.LanguageCode = StreamConfig.LanguageCode.EN_US,
+            target: String = "api.speechly.com",
+            secure: Boolean = true
         ): Client {
             val audioRecorder = AudioRecorder(activity, 16000)
             val cachingIdProvider = CachingIdProvider()
             val cachingIdentityService = CachingIdentityService.forTarget(target, secure)
-            activity.lifecycle.addObserver(object : LifecycleObserver {
-                @OnLifecycleEvent(Lifecycle.Event.ON_START)
-                fun connectListener() {
-                    val cache = SharedPreferencesCache.fromContext(activity.getApplicationContext())
-                    cachingIdProvider.cacheService = cache
-                    cachingIdentityService.cacheService = cache
-
-                    val audioManager = activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-                    if (audioManager.isBluetoothScoAvailableOffCall) {
-                        if (!audioManager.isBluetoothScoOn) {
-                            audioManager.startBluetoothSco()
-                        }
-                    } else {
-                        println("SCO ist not available")
-                    }
-                    audioRecorder.buildRecorder()
+            val cache = SharedPreferencesCache.fromContext(activity.getApplicationContext())
+            cachingIdProvider.cacheService = cache
+            cachingIdentityService.cacheService = cache
+            val audioManager = activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            if (audioManager.isBluetoothScoAvailableOffCall) {
+                if (!audioManager.isBluetoothScoOn) {
+                    audioManager.startBluetoothSco()
                 }
-            })
+            } else {
+                println("SCO ist not available")
+            }
+            audioRecorder.buildRecorder()
 
             return Client(
                     appId,
