@@ -47,7 +47,7 @@ class MainActivity : AppCompatActivity() {
                 MotionEvent.ACTION_DOWN -> {
                     textView?.visibility = View.VISIBLE
                     textView?.text = ""
-                    speechlyClient?.startContext()
+                    speechlyClient?.startContext(UUID.fromString("312137a2-1c8b-47f8-a553-b88b1a884e08"))
                 }
                 MotionEvent.ACTION_UP -> {
                     speechlyClient!!.stopContext()
@@ -67,7 +67,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         speechlyClient = Client.fromActivity(
             activity = this,
-            appId = UUID.fromString("312137a2-1c8b-47f8-a553-b88b1a884e08")
+            appId = null,
+            projectId = UUID.fromString("8030982e-8a1b-491c-bec7-8838de549ee9")
         )
         this.button = findViewById(R.id.speechly)
         this.recyclerView = findViewById(R.id.recycler_view)
