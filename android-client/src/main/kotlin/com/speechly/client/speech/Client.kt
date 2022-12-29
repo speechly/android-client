@@ -90,6 +90,7 @@ class Client (
 ) : ApiClient {
     private val streams: MutableList<SluStream> = mutableListOf()
     private val deviceId: UUID = deviceIdProvider.getDeviceId()
+    private val coroutineScope = CoroutineScope(Job())
 
     init {
         GlobalScope.launch(Dispatchers.IO) {
@@ -184,7 +185,7 @@ class Client (
     @DelicateCoroutinesApi
     @ExperimentalCoroutinesApi
     override fun startContext() {
-        GlobalScope.launch(Dispatchers.IO) {
+        coroutineScope.launch(Dispatchers.IO) {
             val token = identityService.authenticate(appId, deviceId)
             try {
                 val audioFlow: Flow<ByteArray> = audioRecorder.startRecording()
@@ -192,7 +193,7 @@ class Client (
                 streams.add(stream)
 
                 var segment: Segment? = null
-                GlobalScope.launch(Dispatchers.Default) {
+                withContext(Dispatchers.Default) {
                     try {
                         stream.responseFlow?.collect { response: SLUResponse ->
                             if (segment == null) {
@@ -278,6 +279,7 @@ class Client (
             it.close()
             this.streams.remove(it)
         }
+        this.coroutineScope.cancel()
     }
 
     override fun close() {
