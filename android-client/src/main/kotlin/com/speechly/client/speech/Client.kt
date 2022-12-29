@@ -3,15 +3,11 @@ package com.speechly.client.speech
 import android.app.Activity
 import android.content.Context
 import android.media.AudioManager
-import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
-import com.speechly.api.slu.v1.SLURequest
 import com.speechly.api.slu.v1.SLUResponse
 import com.speechly.client.cache.SharedPreferencesCache
 import com.speechly.client.device.CachingIdProvider
 import com.speechly.client.device.DeviceIdProvider
+import com.speechly.client.identity.AuthToken
 import com.speechly.client.identity.CachingIdentityService
 import com.speechly.client.identity.IdentityService
 import com.speechly.client.slu.*
@@ -19,8 +15,6 @@ import kotlinx.coroutines.*
 import java.io.Closeable
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flowOf
 
 /**
  * A client for Speechly Spoken Language Understanding (SLU) API.
@@ -32,7 +26,7 @@ interface ApiClient : Closeable {
      */
     @DelicateCoroutinesApi
     @ExperimentalCoroutinesApi
-    fun startContext()
+    fun startContext(contextAppId: UUID? = null)
     /**
      * Stops current SLU context by sending a stop context event to the API and muting the microphone
      * delayed by contextStopDelay = 250 ms
@@ -80,21 +74,39 @@ interface ApiClient : Closeable {
  */
 class NoActiveStreamException : Throwable("No active SLU stream available")
 
+enum class AuthScope {
+    UNDEFINED, APPLICATION, PROJECT
+}
+
 class Client (
-        private val appId: UUID,
+        private val appId: UUID?,
+        private val projectId: UUID?,
         language: StreamConfig.LanguageCode,
         deviceIdProvider: DeviceIdProvider,
         private val identityService: IdentityService,
         private val sluClient: GrpcSluClient,
         private val audioRecorder: AudioRecorder,
+
 ) : ApiClient {
     private val streams: MutableList<SluStream> = mutableListOf()
     private val deviceId: UUID = deviceIdProvider.getDeviceId()
     private val coroutineScope = CoroutineScope(Job())
+    private var authScope: AuthScope = AuthScope.UNDEFINED
+
 
     init {
-        GlobalScope.launch(Dispatchers.IO) {
-            identityService.authenticate(appId, deviceId) // fetch token
+        if (appId != null) {
+            authScope = AuthScope.APPLICATION
+        } else if (projectId != null) {
+            authScope = AuthScope.PROJECT
+        }
+
+        coroutineScope.launch(Dispatchers.IO) {
+            if (appId != null) {
+                identityService.authenticate(appId, deviceId) // fetch token
+            } else if (projectId != null) {
+                identityService.authenticateProject(projectId, deviceId) // fetch token
+            }
         }
     }
 
@@ -108,7 +120,8 @@ class Client (
     companion object {
         fun fromActivity(
             activity: Activity,
-            appId: UUID,
+            appId: UUID?,
+            projectId: UUID? = null,
             language: StreamConfig.LanguageCode = StreamConfig.LanguageCode.EN_US,
             target: String = "api.speechly.com",
             secure: Boolean = true
@@ -131,6 +144,7 @@ class Client (
 
             return Client(
                     appId,
+                    projectId,
                     language,
                     cachingIdProvider,
                     cachingIdentityService,
@@ -184,12 +198,23 @@ class Client (
 
     @DelicateCoroutinesApi
     @ExperimentalCoroutinesApi
-    override fun startContext() {
+    override fun startContext(contextAppId: UUID?) {
         coroutineScope.launch(Dispatchers.IO) {
-            val token = identityService.authenticate(appId, deviceId)
+            val token: AuthToken = when (authScope) {
+                AuthScope.APPLICATION -> {
+                    identityService.authenticate(appId!!, deviceId)
+                }
+                AuthScope.PROJECT -> {
+                    identityService.authenticateProject(projectId!!, deviceId)
+                }
+                else -> {
+                    throw IllegalStateException("Unknown auth scope")
+                }
+            }
+
             try {
                 val audioFlow: Flow<ByteArray> = audioRecorder.startRecording()
-                val stream = sluClient.stream(token, streamConfig, audioFlow)
+                val stream = sluClient.stream(token, streamConfig, audioFlow, contextAppId)
                 streams.add(stream)
 
                 var segment: Segment? = null
@@ -279,13 +304,13 @@ class Client (
             it.close()
             this.streams.remove(it)
         }
-        this.coroutineScope.cancel()
     }
 
     override fun close() {
         this.audioRecorder.close()
         this.sluClient.close()
         this.identityService.close()
+        this.coroutineScope.cancel()
     }
 
     private fun getReadStream(): SluStream? {

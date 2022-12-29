@@ -5,15 +5,26 @@ import com.speechly.api.slu.v1.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.io.Closeable
+import java.util.UUID
 
-private val startReq: SLURequest = SLURequest
-        .newBuilder()
-        .setEvent(
-                SLUEvent
-                        .newBuilder()
-                        .setEvent(SLUEvent.Event.START)
-                        .build()
-        ).build()
+private fun startReq(appId: UUID?): SLURequest {
+    val event = if (appId == null) {
+        SLUEvent
+                .newBuilder()
+                .setEvent(SLUEvent.Event.START)
+                .build()
+    } else {
+        SLUEvent
+                .newBuilder()
+                .setEvent(SLUEvent.Event.START)
+                .setAppId(appId.toString())
+                .build()
+    }
+    return SLURequest
+            .newBuilder()
+            .setEvent(event)
+            .build()
+}
 
 private val stopReq: SLURequest = SLURequest
         .newBuilder()
@@ -65,7 +76,7 @@ data class StreamConfig(
 /**
  * This class represents an exception thrown when trying to interact with a closed stream.
  */
-class StreamClosedException: Throwable("SLU stream is closed")
+class StreamClosedException : Throwable("SLU stream is closed")
 
 /**
  * A SLU stream implementation backed by Speechly gRPC SLU API.
@@ -79,7 +90,8 @@ class StreamClosedException: Throwable("SLU stream is closed")
 class GrpcSluStream(
         clientStub: SLUGrpcKt.SLUCoroutineStub,
         streamConfig: StreamConfig,
-        audioFlow: Flow<ByteArray>
+        audioFlow: Flow<ByteArray>,
+        streamAppId: UUID?
 //        private val responseChannel: Channel<Slu.SLUResponse> = Channel()
 ) : SluStream {
     var responseFlow: Flow<SLUResponse>? = null
@@ -103,7 +115,7 @@ class GrpcSluStream(
             }
         }.onStart {
             emit(configReq)
-            emit(startReq)
+            emit(startReq(streamAppId))
         }.onCompletion {
             emit(stopReq)
         }

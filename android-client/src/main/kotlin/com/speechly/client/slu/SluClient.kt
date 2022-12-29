@@ -9,6 +9,7 @@ import io.grpc.stub.MetadataUtils
 import java.io.Closeable
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.flow.Flow
+import java.util.UUID
 import kotlinx.coroutines.ExperimentalCoroutinesApi as ExperimentalCoroutinesApi
 
 /**
@@ -22,7 +23,7 @@ interface SluClient : Closeable {
      * @param streamConfig the configuration of the SLU stream.
      */
     @ExperimentalCoroutinesApi
-    fun stream(authToken: AuthToken, streamConfig: StreamConfig, audioFlow: Flow<ByteArray>): SluStream
+    fun stream(authToken: AuthToken, streamConfig: StreamConfig, audioFlow: Flow<ByteArray>, contextAppId: UUID?): SluStream
 }
 
 /**
@@ -52,7 +53,7 @@ class GrpcSluClient(
     }
 
     @ExperimentalCoroutinesApi
-    override fun stream(authToken: AuthToken, streamConfig: StreamConfig, audioFlow: Flow<ByteArray>): GrpcSluStream {
+    override fun stream(authToken: AuthToken, streamConfig: StreamConfig, audioFlow: Flow<ByteArray>, contextAppId: UUID?): GrpcSluStream {
         val metadata = Metadata()
         metadata.put(
             Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER),
@@ -62,7 +63,8 @@ class GrpcSluClient(
         return GrpcSluStream(
                 MetadataUtils.attachHeaders(this.clientStub, metadata),
                 streamConfig,
-                audioFlow
+                audioFlow,
+                contextAppId
         )
     }
 

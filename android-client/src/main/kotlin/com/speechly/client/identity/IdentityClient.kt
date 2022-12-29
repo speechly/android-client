@@ -1,9 +1,9 @@
 package com.speechly.client.identity
 
-import com.speechly.api.identity.v1.IdentityGrpcKt
-import com.speechly.api.identity.v1.LoginRequest
-import com.speechly.api.identity.v1.LoginResponse
+import com.speechly.identity.v2.LoginRequest
+import com.speechly.identity.v2.LoginResponse
 import com.speechly.client.grpc.buildChannel
+import com.speechly.identity.v2.IdentityAPIGrpcKt
 import io.grpc.ManagedChannel
 import io.grpc.Status
 import java.io.Closeable
@@ -42,7 +42,7 @@ class GrpcIdentityClient(
         private val channel: ManagedChannel,
         private val shutdownTimeout: Long = 5
 ) : IdentityClient {
-    private val clientStub = IdentityGrpcKt.IdentityCoroutineStub(this.channel)
+    private val clientStub = IdentityAPIGrpcKt.IdentityAPICoroutineStub(this.channel)
 
     companion object {
         /**

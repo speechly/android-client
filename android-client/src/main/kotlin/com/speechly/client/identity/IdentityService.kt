@@ -1,7 +1,9 @@
 package com.speechly.client.identity
 
-import com.speechly.api.identity.v1.LoginRequest
+import com.speechly.identity.v2.LoginRequest
 import com.speechly.client.cache.CacheService
+import com.speechly.identity.v2.ApplicationScope
+import com.speechly.identity.v2.ProjectScope
 import java.io.Closeable
 import java.time.Instant
 import java.util.UUID
@@ -17,6 +19,14 @@ interface IdentityService : Closeable {
      * @param deviceId Speechly device ID to use for authentication.
      */
     suspend fun authenticate(appId: UUID, deviceId: UUID): AuthToken
+
+    /**
+     * Fetches a new project level authentication token and decodes it into `AuthToken`.
+     *
+     * @param projectId Speechly project ID to use for authentication.
+     * @param deviceId Speechly device ID to use for authentication.
+     */
+    suspend fun authenticateProject(projectId: UUID, deviceId: UUID): AuthToken
 }
 
 /**
@@ -46,9 +56,27 @@ class BasicIdentityService(
     }
 
     override suspend fun authenticate(appId: UUID, deviceId: UUID): AuthToken {
+        val scope = ApplicationScope.newBuilder()
+                .setAppId(appId.toString())
+
         val request = LoginRequest
             .newBuilder()
-            .setAppId(appId.toString())
+            .setApplication(scope)
+            .setDeviceId(deviceId.toString())
+            .build()
+
+        val response = client.login(request)
+
+        return AuthToken.fromJWT(response.token)
+    }
+
+    override suspend fun authenticateProject(projectId: UUID, deviceId: UUID): AuthToken {
+        val scope = ProjectScope.newBuilder()
+                .setProjectId(projectId.toString())
+
+        val request = LoginRequest
+            .newBuilder()
+            .setProject(scope)
             .setDeviceId(deviceId.toString())
             .build()
 
@@ -107,6 +135,20 @@ class CachingIdentityService(
         return this.reloadToken(appId, deviceId)
     }
 
+    override suspend fun authenticateProject(projectId: UUID, deviceId: UUID): AuthToken {
+        // Try to load the token from the cache.
+        val token = this.loadProjectToken(projectId, deviceId)
+
+        // Make sure that cached token exists and won't expire too soon.
+        val expirationTime = Instant.now().plusSeconds(60)
+        if (token != null && token.validateExpiry(expirationTime)) {
+            return token
+        }
+
+        // Otherwise reload the token from the API and update the cached value.
+        return this.reloadProjectToken(projectId, deviceId)
+    }
+
     override fun close() {
         this.baseService.close()
     }
@@ -121,10 +163,28 @@ class CachingIdentityService(
         }
     }
 
+    private fun loadProjectToken(projectId: UUID, deviceId: UUID): AuthToken? {
+        val cacheValue = this.cacheService?.loadString(this.makeCacheKey(projectId, deviceId)) ?: return null
+
+        return try {
+            AuthToken.fromJWT(cacheValue)
+        } catch (_: Throwable) {
+            null
+        }
+    }
+
     private suspend fun reloadToken(appId: UUID, deviceId: UUID): AuthToken {
         val token = this.baseService.authenticate(appId, deviceId)
 
-        this.cacheService?.storeString(this.makeCacheKey(token.appId, token.deviceId), token.tokenString)
+        this.cacheService?.storeString(this.makeCacheKey(token.appId!!, token.deviceId), token.tokenString)
+
+        return token
+    }
+
+    private suspend fun reloadProjectToken(projectId: UUID, deviceId: UUID): AuthToken {
+        val token = this.baseService.authenticateProject(projectId, deviceId)
+
+        this.cacheService?.storeString(this.makeCacheKey(token.projectId!!, token.deviceId), token.tokenString)
 
         return token
     }

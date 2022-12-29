@@ -1,6 +1,7 @@
 package com.speechly.client.identity
 
-import com.speechly.api.identity.v1.IdentityOuterClass
+import com.speechly.identity.v2.LoginRequest
+import com.speechly.identity.v2.LoginResponse
 import kotlinx.coroutines.runBlocking
 import java.util.stream.Stream
 import org.junit.jupiter.params.ParameterizedTest
@@ -21,7 +22,7 @@ internal class IdentityServiceTest {
         wantException: Boolean
     ) = runBlocking<Unit> {
         val id = UUID.randomUUID()
-        val response = IdentityOuterClass.LoginResponse.newBuilder().setToken(token).build()
+        val response = LoginResponse.newBuilder().setToken(token).build()
         val client = MockIdentityClient(response, exception)
         val service = BasicIdentityService(client)
 
@@ -46,7 +47,8 @@ internal class IdentityServiceTest {
                     deviceId = UUID.fromString("22222222-2222-2222-2222-222222222222"),
                     expiresAt = Instant.ofEpochSecond(1909239022),
                     authScopes = setOf(AuthToken.AuthScope.WLU, AuthToken.AuthScope.SLU),
-                    tokenString ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBJZCI6IjExMTExMTExLTExMTEtMTExMS0xMTExLTExMTExMTExMTExMSIsImRldmljZUlkIjoiMjIyMjIyMjItMjIyMi0yMjIyLTIyMjItMjIyMjIyMjIyMjIyIiwiY29uZmlnSWQiOiIzMzMzMzMzMy0zMzMzLTMzMzMtMzMzMy0zMzMzMzMzMzMzMzMiLCJsYW5ndWFnZUNvZGUiOiJlbi1VUyIsInNjb3BlIjoic2x1IHdsdSIsImlzcyI6Imh0dHBzOi8vYXBpLnNwZWVjaGx5LmNvbSIsImF1ZCI6Imh0dHBzOi8vYXBpLnNwZWVjaGx5LmNvbSIsImlhdCI6MTU5OTIzOTAyMiwiZXhwIjoxOTA5MjM5MDIyfQ.zBvA4ahMj5LAzDac61rvw0KwW35X7XkTIiY8AvYf_4I"
+                    tokenString ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBJZCI6IjExMTExMTExLTExMTEtMTExMS0xMTExLTExMTExMTExMTExMSIsImRldmljZUlkIjoiMjIyMjIyMjItMjIyMi0yMjIyLTIyMjItMjIyMjIyMjIyMjIyIiwiY29uZmlnSWQiOiIzMzMzMzMzMy0zMzMzLTMzMzMtMzMzMy0zMzMzMzMzMzMzMzMiLCJsYW5ndWFnZUNvZGUiOiJlbi1VUyIsInNjb3BlIjoic2x1IHdsdSIsImlzcyI6Imh0dHBzOi8vYXBpLnNwZWVjaGx5LmNvbSIsImF1ZCI6Imh0dHBzOi8vYXBpLnNwZWVjaGx5LmNvbSIsImlhdCI6MTU5OTIzOTAyMiwiZXhwIjoxOTA5MjM5MDIyfQ.zBvA4ahMj5LAzDac61rvw0KwW35X7XkTIiY8AvYf_4I",
+                    projectId = null
                 ),
                 false
             ),
@@ -58,7 +60,8 @@ internal class IdentityServiceTest {
                     deviceId = UUID.randomUUID(),
                     expiresAt = Instant.MAX,
                     authScopes = emptySet(),
-                    tokenString =""
+                    tokenString ="",
+                    projectId = null
                 ),
                 true
             ),
@@ -70,7 +73,8 @@ internal class IdentityServiceTest {
                     deviceId = UUID.randomUUID(),
                     expiresAt = Instant.MAX,
                     authScopes = emptySet(),
-                    tokenString = ""
+                    tokenString = "",
+                    projectId = null
                 ),
                 true
             )
@@ -79,10 +83,10 @@ internal class IdentityServiceTest {
 }
 
 private class MockIdentityClient(
-    private val response: IdentityOuterClass.LoginResponse,
+    private val response: LoginResponse,
     private val exception: Throwable?
 ) : IdentityClient {
-    override suspend fun login(request: IdentityOuterClass.LoginRequest): IdentityOuterClass.LoginResponse {
+    override suspend fun login(request: LoginRequest): LoginResponse {
         if (this.exception != null) {
             throw this.exception
         }

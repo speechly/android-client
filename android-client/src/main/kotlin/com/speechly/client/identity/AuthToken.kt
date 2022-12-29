@@ -19,13 +19,15 @@ class InvalidJWTException(message: String) : Throwable(message)
  * The token is usually obtained from Speechly Identity Service and can be cached for its expiration period.
  *
  * @param appId the ID of Speechly application that will be accessed with this token.
+ * @param projectId the ID of Speechly project that will be accessed with this token.
  * @param deviceId Speechly device identifier that is authorised to use this token.
  * @param expiresAt the timestamp of token expiration.
  * @param authScopes Speechly APIs that can be accessed with this token.
  * @param tokenString the token value that should be passed to API when accessing it.
  */
 data class AuthToken(
-        val appId: UUID,
+        val appId: UUID?,
+        val projectId: UUID?,
         val deviceId: UUID,
         val expiresAt: Instant,
         val authScopes: Set<AuthScope>,
@@ -69,7 +71,8 @@ data class AuthToken(
 
             return try {
                 AuthToken(
-                        appId = UUID.fromString(payload.appId),
+                        appId = payload.appId?.let(UUID::fromString),
+                        projectId = payload.projectId?.let(UUID::fromString),
                         deviceId = UUID.fromString(payload.deviceId),
                         expiresAt = Instant.ofEpochSecond(payload.expiresAt),
                         authScopes = scopes,
@@ -104,7 +107,8 @@ data class AuthToken(
 }
 
 private data class TokenPayload(
-    val appId: String,
+    val appId: String? = null,
+    val projectId: String? = null,
     val deviceId: String,
 
     @Json(name = "scope")
