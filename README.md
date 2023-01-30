@@ -94,7 +94,7 @@ speechlyClient.onSegmentChange { segment: Segment ->
 
 ```
 
-Check out the [example repo filtering app](https://github.com/speechly/android-repo-filtering) for a demo app built using this client.
+Check out the [Speechle Android Client Example](https://github.com/speechly/android-repo-filtering) for a demo app built using this client.
 
 ## Documentation
 
